@@ -1,14 +1,94 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valdara – Eure Wahl</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07101d">
+<title>VALDARA – Eure Wahl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+<header class="site-header">
+  <a class="brand" href="#start" aria-label="Valdara Startseite"><img src="assets/valdara-logo.jpg" alt="Valdara Logo"><span>VALDARA<small>EURE WAHL</small></span></a>
+  <nav class="main-nav" id="mainNav">
+    <a class="active" href="#start">Startseite</a><a href="#welt">Welt</a><a href="#voelker">Völker</a><a href="#geschichten">Geschichten</a><a href="#entscheidungen">Entscheidungen</a><a href="#community">Community</a>
+  </nav>
+  <div class="header-actions"><button class="icon-btn" aria-label="Suche">⌕</button><button class="login-btn">Anmelden</button><button class="menu-btn" id="menuBtn">☰</button></div>
+</header>
+<main>
+<section class="hero" id="start">
+  <div class="hero-content">
+    <div class="eyebrow">DIE GESCHICHTE BEGINNT</div>
+    <h1>VALDARA</h1>
+    <p class="hero-sub">Eine lebendige Fantasy-Welt, deren Geschichten durch <strong>eure Entscheidungen</strong> entstehen.</p>
+    <div class="hero-actions"><a class="glow-btn" href="#welt">Welt entdecken <span>→</span></a><a class="text-link" href="#voelker">Völker kennenlernen</a></div>
+    <div class="hero-meta"><span><i></i> 6 bekannte Völker</span><span><i></i> 1 Welt</span><span><i></i> Eure Entscheidungen</span></div>
+  </div>
+  <div class="hero-scroll">SCROLL <span>↓</span></div>
+</section>
 
-    <h1>VALDARA – EURE WAHL</h1>
-    <p>Die interaktive Fantasy-Welt.</p>
+<section class="intro section">
+  <div class="section-heading centered"><span class="eyebrow">WILLKOMMEN IN VALDARA</span><h2>Eure Entscheidungen verändern die Welt.</h2><p>Entdeckt Länder, Völker und Orte. Verfolgt die Geschichten und entscheidet selbst, welchen Weg sie nehmen.</p></div>
+</section>
 
+<section class="map-section section" id="welt">
+  <div class="section-heading"><span class="eyebrow">DIE WELT</span><h2>Valdara entdecken</h2><p>Die bekannte Welt von Valdara – mit Reichen, Städten und Orten, die im Verlauf der Geschichte sichtbar werden.</p></div>
+  <div class="map-shell">
+    <div class="map-top"><span>VALDARA · ÜBERSICHT</span><span class="map-status"><i></i> Welt aktiv</span></div>
+    <div class="map-view" id="mapView">
+      <img src="assets/valdara-map.jpg" alt="Karte von Valdara">
+      <button class="map-marker m-meravia" data-place="Meravia">✦<span>Meravia</span></button>
+      <button class="map-marker m-aelith" data-place="Aelith">✦<span>Aelith</span></button>
+      <button class="map-marker m-khar" data-place="Khar-Dumel">✦<span>Khar-Dumel</span></button>
+      <button class="map-marker m-zareth" data-place="Zareth">✦<span>Zareth</span></button>
+    </div>
+    <div class="map-bottom"><span>Interaktive Karte</span><a href="#welt-detail">Karte öffnen →</a></div>
+  </div>
+</section>
+
+<section class="world-cards section">
+  <div class="section-heading"><span class="eyebrow">VALDARA</span><h2>Die Welt wartet.</h2></div>
+  <div class="feature-grid">
+    <a class="feature-card" href="#voelker"><div class="feature-icon">◈</div><h3>Völker</h3><p>Sechs bekannte Völker. Sechs unterschiedliche Geschichten.</p><span>Entdecken →</span></a>
+    <a class="feature-card" href="#welt"><div class="feature-icon">◇</div><h3>Reiche</h3><p>Valmeris, Aelvaris, Durnakhar, Gorvath, Zarveth und Kharuun.</p><span>Die Reiche →</span></a>
+    <a class="feature-card" href="#welt"><div class="feature-icon">✧</div><h3>Orte</h3><p>Städte, Regionen, Ruinen und Orte, die mit der Geschichte wachsen.</p><span>Orte erkunden →</span></a>
+  </div>
+</section>
+
+<section class="peoples section" id="voelker">
+  <div class="section-heading"><span class="eyebrow">DIE SECHS BEKANNTEN VÖLKER</span><h2>Welches Volk wird deine Geschichte erzählen?</h2><p>Jedes Volk hat seine eigene Heimat, Geschichte und besondere Eigenschaften.</p></div>
+  <div class="people-grid" id="peopleGrid"></div>
+</section>
+
+<section class="story-section section" id="geschichten">
+  <div class="story-panel">
+    <div><span class="eyebrow">DIE SERIE</span><h2>VALDARA – Eure Wahl</h2><p>Die Geschichte entsteht nicht nur durch das, was passiert. Sie entsteht durch das, wofür ihr euch entscheidet.</p><a class="glow-btn" href="#entscheidungen">Geschichte verfolgen <span>→</span></a></div>
+    <div class="episode-card"><span>AKTUELLE FOLGE</span><strong>Folge 2</strong><p>Welches Volk wirst du wählen?</p><div class="episode-line"><i></i><i></i><i></i><i></i></div></div>
+  </div>
+</section>
+
+<section class="decision section" id="entscheidungen">
+  <div class="section-heading centered"><span class="eyebrow">AKTUELLE ENTSCHEIDUNG</span><h2>Ihr entscheidet.</h2><p>Die nächste Entscheidung bestimmt, welches Volk unsere Geschichte erzählen wird.</p></div>
+  <div class="decision-card">
+    <div class="decision-question"><span class="decision-number">01</span><div><span class="eyebrow">FOLGE 2</span><h3>Welches Volk soll unser Charakter sein?</h3></div></div>
+    <div class="choice-grid">
+      <button>Meren <span>→</span></button><button>Elarin <span>→</span></button><button>Durn <span>→</span></button><button>Urakai <span>→</span></button><button>Dravari <span>→</span></button><button>Kharai <span>→</span></button>
+    </div>
+    <div class="decision-footer"><span>Eine Stimme pro Account</span><span>Die Entscheidung bleibt bis zum Ende offen.</span></div>
+  </div>
+</section>
+
+<section class="social section" id="community">
+  <div class="section-heading centered"><span class="eyebrow">TEIL DER WELT WERDEN</span><h2>Valdara ist eine Gemeinschaft.</h2></div>
+  <div class="social-grid"><a class="social-card youtube" href="#"><span class="social-symbol">▶</span><div><strong>YouTube</strong><p>Folgen ansehen &amp; Geschichte verfolgen</p></div><span>→</span></a><a class="social-card instagram" href="#"><span class="social-symbol">◎</span><div><strong>Instagram</strong><p>Entscheidungen, Bilder &amp; Neuigkeiten</p></div><span>→</span></a><a class="social-card discord" href="#"><span class="social-symbol">◌</span><div><strong>Discord</strong><p>Mit der Community diskutieren</p></div><span>→</span></a></div>
+</section>
+</main>
+<footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="#welt">Welt</a><a href="#voelker">Völker</a><a href="#geschichten">Geschichten</a><a href="#community">Community</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p><div class="footer-bottom"><span>© 2026 VALDARA – EURE WAHL</span><span>Die Welt wächst mit euch.</span></div></footer>
+<script src="supabase-config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
