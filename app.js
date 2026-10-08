@@ -104,9 +104,22 @@ let markerStyles = {};
 function resolveMarkerStyle(marker) {
   const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
   let code = marker.marker_type || 'custom';
+
+  // Realm-Marker bleiben custom + realm_id.
   if (marker.realm_id && !marker.location_id) code = 'realm';
   else if (locationType) code = locationType;
-  return markerStyles[code] || markerStyles[marker.marker_type] || markerStyles.location || null;
+
+  if (markerStyles[code]) return markerStyles[code];
+  if (markerStyles[marker.marker_type]) return markerStyles[marker.marker_type];
+
+  // Robuste Fallbacks: bestehende Marker funktionieren auch ohne marker_styles.
+  const fallback = {
+    city: {color:'#F2C94C', border_color:'#6f5310', size:20, icon:'', render_mode:'point', opacity:1},
+    village: {color:'#A66A3F', border_color:'#5C3718', size:10, icon:'', render_mode:'point', opacity:1},
+    custom: {color:'#D7AD58', border_color:'#222', size:14, icon:'', render_mode:'point', opacity:1},
+    realm: {color:'#D7AD58', border_color:'#222', size:18, icon:'', render_mode:'point', opacity:1}
+  };
+  return fallback[code] || fallback[marker.marker_type] || fallback.custom;
 }
 
 function applyMarkerStyle(button, style) {
@@ -150,8 +163,17 @@ async function loadMapFromSupabase() {
     const map = maps[0];
     if (!map) throw new Error('Valdara-Karte wurde in Supabase nicht gefunden.');
     setMapImage(map.image_url || VALDARA_MAP_PUBLIC_URL);
-    const styles = await supabaseGet(`marker_styles?select=marker_type,display_name,render_mode,color,size,icon,opacity,border_color&is_active=eq.true&order=marker_type.asc`);
-    markerStyles = Object.fromEntries(styles.map(style => [style.marker_type, style]));
+    // Marker-Styles sind eine optionale Darstellungsebene.
+    // Falls die neue Tabelle/Policy noch nicht verfügbar ist, dürfen
+    // die bestehenden Kartenmarker NICHT ausfallen.
+    try {
+      const styles = await supabaseGet(`marker_styles?select=marker_type,display_name,render_mode,color,size,icon,opacity,border_color&is_active=eq.true&order=marker_type.asc`);
+      markerStyles = Object.fromEntries(styles.map(style => [style.marker_type, style]));
+    } catch (styleError) {
+      console.warn('Marker-Styles nicht verfügbar – verwende Fallback-Darstellung:', styleError);
+      markerStyles = {};
+    }
+
     const markers = await supabaseGet(`map_markers?select=id,name,description,marker_type,x,y,is_visible,is_active,location_id,realm_id,locations(location_type)&map_id=eq.${VALDARA_MAP_ID}&is_visible=eq.true&is_active=eq.true&order=name.asc`);
     renderMapMarkers(markers);
     setMapStatus(map.image_url ? 'Welt aktiv · Supabase' : 'Welt aktiv · neue Masterkarte',true);
