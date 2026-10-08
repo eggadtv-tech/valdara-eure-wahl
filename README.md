@@ -43,3 +43,12 @@ Die sechs Bild-URLs werden bereits aus `image_url` geladen.
 - weitere Supabase-Tabellen
 
 Diese Bereiche werden später auf diesen Frontend-Master aufgesetzt.
+
+
+## Karten-Frontend
+
+Die Valdara-Masterkarte wird nicht mehr fest über `assets/valdara-map.jpg` eingebunden. `app.js` lädt den Datensatz `maps.id = 58dd9430-3789-4e41-88b0-366f2678fb00` aus Supabase und verwendet dessen `image_url`.
+
+Die Kartenmarker werden dynamisch aus `map_markers` geladen. Die Markerpositionen verwenden das aktuelle **0–5000 × 0–5000**-Koordinatensystem; `x` und `y` werden direkt als Prozentposition auf der Karte dargestellt.
+
+Solange `maps.image_url` noch leer ist, verwendet das Frontend die mitgelieferte neue Arbeitskarte `assets/valdara-master-wegenetz.png` als Fallback. Die alte `assets/valdara-map.jpg` wurde entfernt.
