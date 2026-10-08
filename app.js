@@ -114,10 +114,10 @@ function resolveMarkerStyle(marker) {
 
   // Robuste Fallbacks: bestehende Marker funktionieren auch ohne marker_styles.
   const fallback = {
-    city: {color:'#F2C94C', border_color:'#6f5310', size:20, icon:'', render_mode:'point', opacity:1},
-    village: {color:'#A66A3F', border_color:'#5C3718', size:10, icon:'', render_mode:'point', opacity:1},
-    custom: {color:'#D7AD58', border_color:'#222', size:14, icon:'', render_mode:'point', opacity:1},
-    realm: {color:'#D7AD58', border_color:'#222', size:18, icon:'', render_mode:'point', opacity:1}
+    city: {color:'#F2C94C', border_color:'#6f5310', size:10, icon:'', render_mode:'point', opacity:1},
+    village: {color:'#8B5A2B', border_color:'#5C3718', size:5, icon:'', render_mode:'point', opacity:1},
+    custom: {color:'#D7AD58', border_color:'#222', size:11, icon:'', render_mode:'point', opacity:1},
+    realm: {color:'#D7AD58', border_color:'#222', size:12, icon:'', render_mode:'point', opacity:1}
   };
   return fallback[code] || fallback[marker.marker_type] || fallback.custom;
 }
