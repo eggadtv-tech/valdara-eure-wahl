@@ -159,6 +159,19 @@ function weatherTemperature(value) {
   return Number.isFinite(n) ? `${n > 0 ? '+' : ''}${n.toFixed(1)}°` : '–';
 }
 
+let weatherVisible = true;
+
+function applyWeatherVisibility() {
+  mapView.querySelectorAll('.map-weather').forEach(el => {
+    el.style.display = weatherVisible ? 'flex' : 'none';
+  });
+  if (weatherLegend) weatherLegend.classList.toggle('visible', weatherVisible && mapView.querySelectorAll('.map-weather').length > 0);
+  if (weatherToggle) {
+    weatherToggle.classList.toggle('active', weatherVisible);
+    weatherToggle.setAttribute('aria-pressed', weatherVisible ? 'true' : 'false');
+  }
+}
+
 function renderWeatherLayer(rows) {
   mapView.querySelectorAll('.map-weather').forEach(el => el.remove());
   if (!Array.isArray(rows)) return;
@@ -183,8 +196,7 @@ function renderWeatherLayer(rows) {
     mapView.appendChild(badge);
   });
 
-  if (weatherLegend) weatherLegend.classList.toggle('visible', rows.length > 0);
-  if (weatherToggle) weatherToggle.classList.toggle('active', rows.length > 0);
+  applyWeatherVisibility();
 }
 
 async function loadWeatherForMap() {
@@ -292,9 +304,11 @@ async function loadPeoplesFromSupabase() {
 loadMapFromSupabase();
 loadPeoplesFromSupabase();
 
-weatherToggle?.addEventListener('click', () => {
-  const hidden = mapView.classList.toggle('weather-hidden');
-  weatherToggle.classList.toggle('active', !hidden);
+weatherToggle?.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  weatherVisible = !weatherVisible;
+  applyWeatherVisibility();
 });
 
 const menu=document.querySelector('#menuBtn'); const nav=document.querySelector('#mainNav');
