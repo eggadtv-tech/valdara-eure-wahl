@@ -1,5 +1,5 @@
 const VALDARA_MAP_ID = '58dd9430-3789-4e41-88b0-366f2678fb00';
-const VALDARA_MAP_PUBLIC_URL = 'https://vunvrgopzcbbxcxyjnxp.supabase.co/storage/v1/object/public/valdara-media/maps/continents/Valdara_Master_Map_Wegenetz_v3_hellbraun.png';
+const VALDARA_MAP_PUBLIC_URL = 'https://vunvrgopzcbbxcxyjnxp.supabase.co/storage/v1/object/public/valdara-media/maps/continents/Valdara_Master_Map_Wegenetz_v4_Siedlungsnetz.png';
 
 const fallbackPeoples = [
   {name:'Meren',realm:'Valmeris',image:'assets/valdara-meren.jpg',desc:'Handel, Landwirtschaft und Diplomatie'},
@@ -18,6 +18,8 @@ const peopleModal = document.querySelector('#peopleModal');
 const peopleModalContent = document.querySelector('#peopleModalContent');
 const mapDetailModal = document.querySelector('#mapDetailModal');
 const mapDetailContent = document.querySelector('#mapDetailContent');
+const weatherToggle = document.querySelector('#weatherToggle');
+const weatherLegend = document.querySelector('#weatherLegend');
 
 const detailSections = [
   ['overview','Überblick'],
@@ -133,6 +135,80 @@ function applyMarkerStyle(button, style) {
   button.dataset.icon = style.icon || '●';
 }
 
+const WEATHER_VISUALS = {
+  clear: { icon: '☀', color: '#f2c94c' },
+  cloudy: { icon: '☁', color: '#b8c4d1' },
+  rain: { icon: '☂', color: '#65a9d8' },
+  storm: { icon: '◒', color: '#8c78c6' },
+  thunderstorm: { icon: 'ϟ', color: '#d6b25e' },
+  snow: { icon: '❄', color: '#dcefff' },
+  fog: { icon: '≋', color: '#aeb7bd' },
+  heat: { icon: '♨', color: '#e8845c' },
+  cold: { icon: '❅', color: '#8fd2ff' },
+  magical_storm: { icon: '✦', color: '#c38cff' },
+  cursed_fog: { icon: '☠', color: '#9c7fb9' },
+  arcane_rain: { icon: '✧', color: '#8db8ff' }
+};
+
+function weatherVisual(key) {
+  return WEATHER_VISUALS[key] || { icon: '•', color: '#d7ad58' };
+}
+
+function weatherTemperature(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? `${n > 0 ? '+' : ''}${n.toFixed(1)}°` : '–';
+}
+
+function renderWeatherLayer(rows) {
+  mapView.querySelectorAll('.map-weather').forEach(el => el.remove());
+  if (!Array.isArray(rows)) return;
+
+  rows.forEach(row => {
+    const location = Array.isArray(row.locations) ? row.locations[0] : row.locations;
+    const x = Number(location?.map_x);
+    const y = Number(location?.map_y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+    const visual = weatherVisual(row.dominant_weather);
+    const badge = document.createElement('button');
+    badge.type = 'button';
+    badge.className = `map-weather weather-${String(row.dominant_weather || 'unknown').replace(/[^a-z0-9_-]/gi,'')}`;
+    badge.style.left = `${Math.max(0, Math.min(5000, x)) / 50}%`;
+    badge.style.top = `${Math.max(0, Math.min(5000, y)) / 50}%`;
+    badge.style.setProperty('--weather-color', visual.color);
+    badge.setAttribute('aria-label', `${location.name || 'Ort'}: ${row.dominant_weather_name || 'Wetter'}, ${weatherTemperature(row.temperature)}`);
+    badge.title = `${location.name || 'Ort'} · ${row.dominant_weather_name || 'Wetter'} · ${weatherTemperature(row.temperature)}`;
+    badge.innerHTML = `<span class="weather-icon">${visual.icon}</span><span class="weather-temp">${weatherTemperature(row.temperature)}</span>`;
+    badge.addEventListener('click', event => event.stopPropagation());
+    mapView.appendChild(badge);
+  });
+
+  if (weatherLegend) weatherLegend.classList.toggle('visible', rows.length > 0);
+  if (weatherToggle) weatherToggle.classList.toggle('active', rows.length > 0);
+}
+
+async function loadWeatherForMap() {
+  if (!hasSupabaseConfig()) return;
+  try {
+    let rows;
+    try {
+      rows = await supabaseGet(`location_weather?select=location_id,temperature,wind_speed,precipitation,dominant_weather,dominant_weather_name,dominant_weather_score,weather_transition,locations(name,map_x,map_y,location_type)&is_active=eq.true&source=eq.interpolated`);
+    } catch (embeddedError) {
+      const weatherRows = await supabaseGet(`location_weather?select=location_id,temperature,wind_speed,precipitation,dominant_weather,dominant_weather_name,dominant_weather_score,weather_transition&is_active=eq.true&source=eq.interpolated`);
+      const ids = [...new Set(weatherRows.map(row => row.location_id).filter(Boolean))];
+      if (!ids.length) throw embeddedError;
+      const locations = await supabaseGet(`locations?select=id,name,map_x,map_y,location_type&id=in.(${ids.map(id => encodeURIComponent(id)).join(',')})&is_active=eq.true`);
+      const byId = Object.fromEntries(locations.map(location => [location.id, location]));
+      rows = weatherRows.map(row => ({...row, locations: byId[row.location_id] || null}));
+    }
+    renderWeatherLayer(rows);
+    if (rows.length) setMapStatus(`Welt aktiv · Wetter aktuell · ${rows.length} Orte`, true);
+  } catch (error) {
+    console.warn('Wetterebene konnte nicht geladen werden:', error);
+    renderWeatherLayer([]);
+  }
+}
+
 function renderMapMarkers(markers) {
   mapView.querySelectorAll('.map-marker').forEach(marker => marker.remove());
   markers.forEach(marker => {
@@ -177,6 +253,7 @@ async function loadMapFromSupabase() {
     const markers = await supabaseGet(`map_markers?select=id,name,description,marker_type,x,y,is_visible,is_active,location_id,realm_id,locations(location_type)&map_id=eq.${VALDARA_MAP_ID}&is_visible=eq.true&is_active=eq.true&order=name.asc`);
     renderMapMarkers(markers);
     setMapStatus(map.image_url ? 'Welt aktiv · Supabase' : 'Welt aktiv · neue Masterkarte',true);
+    await loadWeatherForMap();
   } catch(error) {
     console.error('Valdara-Karte konnte nicht aus Supabase geladen werden:',error);
     setMapStatus('Welt aktiv · neue Masterkarte',true);
@@ -214,6 +291,12 @@ async function loadPeoplesFromSupabase() {
 
 loadMapFromSupabase();
 loadPeoplesFromSupabase();
+
+weatherToggle?.addEventListener('click', () => {
+  const visible = mapView.querySelector('.map-weather');
+  mapView.classList.toggle('weather-hidden', Boolean(visible));
+  weatherToggle.classList.toggle('active', !visible);
+});
 
 const menu=document.querySelector('#menuBtn'); const nav=document.querySelector('#mainNav');
 menu?.addEventListener('click',()=>nav?.classList.toggle('open'));

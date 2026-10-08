@@ -16,3 +16,18 @@ Vorgesehene Typen:
 - Wetter: Sonne, Bewölkung, Regen, Sturm, Gewitter, Schnee, Nebel, Hitze, Kälte, magisches Wetter
 
 Gebiets- und Wetterflächen werden über die DB-Strukturen `map_areas` und `weather_states` vorbereitet. Realtime-Wetter kann später als `source='realtime'` gespeichert werden; Würfeländerungen als `source='dice'` bzw. in `weather_rolls`.
+
+
+## Echtzeit-Wetter auf der Karte
+
+Das Frontend lädt die aktiven interpolierten Wetterlagen aus `location_weather` und zeigt sie direkt an den vorhandenen Valdara-Orten auf der 5000×5000-Karte.
+
+- Datenquelle: `location_weather`
+- Grundlage: reale Open-Meteo-Daten über die 18 Wetter-Referenzpunkte
+- Interpolation: bestehende DB-Views/Funktion (`weather_location_current`, `refresh_location_weather()`)
+- Darstellung: Wetter-Symbol + Temperatur je Ort
+- Schaltfläche `☁ Wetter`: Wetterebene ein-/ausblendbar
+- Keine Änderung der bestehenden Orts-/Reichsmarker
+- Fallback auf eine zweite `locations`-Abfrage, falls Supabase-Relationen beim REST-Embed nicht verfügbar sind
+
+Die Frontend-Karte verwendet als aktuelle Fallback-Karte `Valdara_Master_Map_Wegenetz_v4_Siedlungsnetz.png`.
