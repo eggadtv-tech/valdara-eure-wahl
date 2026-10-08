@@ -17,3 +17,31 @@
 .map-detail-head{padding:58px 42px 34px;border-bottom:1px solid rgba(215,173,88,.18)}.map-detail-image{padding:28px 42px 0}.map-detail-image img{display:block;width:100%;max-height:65vh;object-fit:contain;background:#030811;border:1px solid rgba(215,173,88,.16)}.map-detail-note{padding:20px 42px 35px;font-size:12px}.map-detail-loading{padding:70px 42px}
 .modal-open{overflow:hidden}
 @media(max-width:700px){.people-modal,.map-detail-modal{padding:10px}.people-modal-dialog,.map-detail-dialog{max-height:96vh}.people-detail-head{grid-template-columns:1fr}.people-detail-head img{height:300px;min-height:0}.people-detail-head>div{padding:30px 24px}.people-video{padding:24px 24px 0}.lore-accordions{padding:24px}.people-modal-close{right:10px;top:10px}.map-detail-head,.map-detail-image,.map-detail-note{padding-left:24px;padding-right:24px}}
+
+/* Dorfmarker: kleiner und braun, klar von den gelben Stadtmarkern unterscheidbar */
+.map-marker.marker-village{width:14px;height:14px;z-index:4}
+.map-marker.marker-village .marker-dot{width:6px;height:6px;background:#a66a3f;border:1.5px solid rgba(30,18,10,.95);box-shadow:0 0 5px rgba(166,106,63,.75),0 0 9px rgba(0,0,0,.9)}
+.map-marker.marker-village .marker-label{border-color:rgba(166,106,63,.45)}
+.map-marker.marker-village:hover .marker-dot{width:7px;height:7px;background:#bd7b4a;box-shadow:0 0 7px rgba(189,123,74,.9),0 0 10px rgba(0,0,0,.9)}
+
+/* ============================================================
+   Dynamische Marker-Styles aus Supabase
+   ============================================================ */
+.map-marker .marker-dot{
+  width:var(--marker-size,14px);
+  height:var(--marker-size,14px);
+  min-width:var(--marker-size,14px);
+  min-height:var(--marker-size,14px);
+  background:var(--marker-color,#d7ad58);
+  border:var(--marker-border-width,1px) solid var(--marker-border,#222);
+  opacity:var(--marker-opacity,1);
+  box-shadow:0 0 7px color-mix(in srgb,var(--marker-color,#d7ad58) 70%,transparent),0 0 10px rgba(0,0,0,.9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  font-size:calc(var(--marker-size,14px) * .55);
+  color:#111;
+}
+.map-marker[data-render-mode="area"] .marker-dot{border-radius:50%;}
+.map-marker[data-render-mode="line"] .marker-dot{border-radius:2px;}

@@ -99,6 +99,27 @@ async function openMapMarker(marker) {
   }
 }
 
+let markerStyles = {};
+
+function resolveMarkerStyle(marker) {
+  const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
+  let code = marker.marker_type || 'custom';
+  if (marker.realm_id && !marker.location_id) code = 'realm';
+  else if (locationType) code = locationType;
+  return markerStyles[code] || markerStyles[marker.marker_type] || markerStyles.location || null;
+}
+
+function applyMarkerStyle(button, style) {
+  if (!style) return;
+  button.style.setProperty('--marker-color', style.color || '#d7ad58');
+  button.style.setProperty('--marker-size', `${Number(style.size || 14)}px`);
+  button.style.setProperty('--marker-opacity', String(style.opacity ?? 1));
+  button.style.setProperty('--marker-border', style.border_color || '#222');
+  button.style.setProperty('--marker-border-width', `${Number(style.border_width || 1)}px`);
+  button.dataset.renderMode = style.render_mode || 'point';
+  button.dataset.icon = style.icon || '●';
+}
+
 function renderMapMarkers(markers) {
   mapView.querySelectorAll('.map-marker').forEach(marker => marker.remove());
   markers.forEach(marker => {
@@ -107,11 +128,15 @@ function renderMapMarkers(markers) {
     const button = document.createElement('button');
     button.type = 'button';
     const markerClass = String(marker.marker_type || 'location').replace(/[^a-z0-9_-]/gi,'');
-    button.className = `map-marker marker-${markerClass}`;
+    const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
+    const typeClass = String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
+    const style = resolveMarkerStyle(marker);
+    button.className = `map-marker marker-${markerClass}${typeClass ? ` marker-${typeClass}` : ''}`;
+    applyMarkerStyle(button, style);
     button.style.left = `${Math.max(0,Math.min(5000,x))/50}%`;
     button.style.top = `${Math.max(0,Math.min(5000,y))/50}%`;
     button.dataset.place = marker.name || 'Ort';
-    button.innerHTML = `<span class="marker-dot" aria-hidden="true"></span><span class="marker-label">${escapeHtml(marker.name || 'Ort')}</span>`;
+    button.innerHTML = `<span class="marker-dot" aria-hidden="true">${escapeHtml(style?.icon || '')}</span><span class="marker-label">${escapeHtml(marker.name || 'Ort')}</span>`;
     button.addEventListener('click', event => { event.stopPropagation(); openMapMarker(marker); });
     mapView.appendChild(button);
   });
@@ -125,7 +150,9 @@ async function loadMapFromSupabase() {
     const map = maps[0];
     if (!map) throw new Error('Valdara-Karte wurde in Supabase nicht gefunden.');
     setMapImage(map.image_url || VALDARA_MAP_PUBLIC_URL);
-    const markers = await supabaseGet(`map_markers?select=id,name,description,marker_type,x,y,is_visible,is_active,location_id,realm_id&map_id=eq.${VALDARA_MAP_ID}&is_visible=eq.true&is_active=eq.true&order=name.asc`);
+    const styles = await supabaseGet(`marker_styles?select=type_code,display_name,render_mode,color,size,icon,opacity,border_color,border_width&is_active=eq.true&order=sort_order.asc`);
+    markerStyles = Object.fromEntries(styles.map(style => [style.type_code, style]));
+    const markers = await supabaseGet(`map_markers?select=id,name,description,marker_type,x,y,is_visible,is_active,location_id,realm_id,locations(location_type)&map_id=eq.${VALDARA_MAP_ID}&is_visible=eq.true&is_active=eq.true&order=name.asc`);
     renderMapMarkers(markers);
     setMapStatus(map.image_url ? 'Welt aktiv · Supabase' : 'Welt aktiv · neue Masterkarte',true);
   } catch(error) {
