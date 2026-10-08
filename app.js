@@ -115,7 +115,7 @@ function applyMarkerStyle(button, style) {
   button.style.setProperty('--marker-size', `${Number(style.size || 14)}px`);
   button.style.setProperty('--marker-opacity', String(style.opacity ?? 1));
   button.style.setProperty('--marker-border', style.border_color || '#222');
-  button.style.setProperty('--marker-border-width', `${Number(style.border_width || 1)}px`);
+  button.style.setProperty('--marker-border-width', '1px');
   button.dataset.renderMode = style.render_mode || 'point';
   button.dataset.icon = style.icon || '●';
 }
@@ -150,8 +150,8 @@ async function loadMapFromSupabase() {
     const map = maps[0];
     if (!map) throw new Error('Valdara-Karte wurde in Supabase nicht gefunden.');
     setMapImage(map.image_url || VALDARA_MAP_PUBLIC_URL);
-    const styles = await supabaseGet(`marker_styles?select=type_code,display_name,render_mode,color,size,icon,opacity,border_color,border_width&is_active=eq.true&order=sort_order.asc`);
-    markerStyles = Object.fromEntries(styles.map(style => [style.type_code, style]));
+    const styles = await supabaseGet(`marker_styles?select=marker_type,display_name,render_mode,color,size,icon,opacity,border_color&is_active=eq.true&order=marker_type.asc`);
+    markerStyles = Object.fromEntries(styles.map(style => [style.marker_type, style]));
     const markers = await supabaseGet(`map_markers?select=id,name,description,marker_type,x,y,is_visible,is_active,location_id,realm_id,locations(location_type)&map_id=eq.${VALDARA_MAP_ID}&is_visible=eq.true&is_active=eq.true&order=name.asc`);
     renderMapMarkers(markers);
     setMapStatus(map.image_url ? 'Welt aktiv · Supabase' : 'Welt aktiv · neue Masterkarte',true);
