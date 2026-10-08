@@ -111,7 +111,7 @@ function renderMapMarkers(markers) {
     button.style.left = `${Math.max(0,Math.min(5000,x))/50}%`;
     button.style.top = `${Math.max(0,Math.min(5000,y))/50}%`;
     button.dataset.place = marker.name || 'Ort';
-    button.innerHTML = `✦<span>${escapeHtml(marker.name || 'Ort')}</span>`;
+    button.innerHTML = `<span class="marker-dot" aria-hidden="true"></span><span class="marker-label">${escapeHtml(marker.name || 'Ort')}</span>`;
     button.addEventListener('click', event => { event.stopPropagation(); openMapMarker(marker); });
     mapView.appendChild(button);
   });
