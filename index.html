@@ -40,7 +40,7 @@
   <div class="map-shell">
     <div class="map-top"><span>VALDARA · ÜBERSICHT</span><span class="map-status" id="mapStatus"><i></i> Karte wird geladen …</span></div>
     <div class="map-view" id="mapView">
-      <img id="valdaraMap" src="assets/valdara-master-wegenetz.png" alt="Karte von Valdara">
+      <img id="valdaraMap" src="https://vunvrgopzcbbxcxyjnxp.supabase.co/storage/v1/object/public/valdara-media/maps/continents/Valdara_Master_Map_Wegenetz_v3_hellbraun.png?v=20261008-5000" alt="Karte von Valdara">
     </div>
     <div class="map-bottom"><span>Interaktive Karte</span><a href="#welt-detail">Karte öffnen →</a></div>
   </div>
@@ -84,6 +84,20 @@
 </section>
 </main>
 <footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="#welt">Welt</a><a href="#voelker">Völker</a><a href="#geschichten">Geschichten</a><a href="#community">Community</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p><div class="footer-bottom"><span>© 2026 VALDARA – EURE WAHL</span><span>Die Welt wächst mit euch.</span></div></footer>
+
+<div class="people-modal" id="peopleModal" aria-hidden="true">
+  <div class="people-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="peopleModalTitle">
+    <button class="people-modal-close" id="peopleModalClose" type="button" aria-label="Fenster schließen">×</button>
+    <div id="peopleModalContent"></div>
+  </div>
+</div>
+
+<div class="map-detail-modal" id="mapDetailModal" aria-hidden="true">
+  <div class="map-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="mapDetailTitle">
+    <button class="people-modal-close" id="mapDetailClose" type="button" aria-label="Fenster schließen">×</button>
+    <div id="mapDetailContent"></div>
+  </div>
+</div>
 <script src="supabase-config.js"></script>
 <script src="app.js"></script>
 </body>

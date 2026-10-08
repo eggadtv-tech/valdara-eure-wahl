@@ -1,4 +1,4 @@
-# VALDARA – Eure Wahl | Frontend-Master v02
+# VALDARA – Eure Wahl | Frontend-Master v05 – 5000 Dynamic Map
 
 Bestehender Valdara-Frontend-Master mit dynamischer Völker-Bildanbindung über Supabase.
 
@@ -51,4 +51,8 @@ Die Valdara-Masterkarte wird nicht mehr fest über `assets/valdara-map.jpg` eing
 
 Die Kartenmarker werden dynamisch aus `map_markers` geladen. Die Markerpositionen verwenden das aktuelle **0–5000 × 0–5000**-Koordinatensystem; `x` und `y` werden direkt als Prozentposition auf der Karte dargestellt.
 
-Solange `maps.image_url` noch leer ist, verwendet das Frontend die mitgelieferte neue Arbeitskarte `assets/valdara-master-wegenetz.png` als Fallback. Die alte `assets/valdara-map.jpg` wurde entfernt.
+`maps.image_url` aus Supabase Storage ist die Kartenquelle. Es gibt keine lokale Kartenkopie im Frontend.
+
+## Kartenquelle v05
+
+Die neue Valdara-Masterkarte `Valdara_Master_Map_Wegenetz_v3_hellbraun.png` ist jetzt die primäre Kartenquelle. Sie liegt im öffentlichen Supabase-Storage unter `valdara-media/maps/continents/`. Das Frontend verwendet diese URL bereits beim initialen Laden und als sicheren Fallback, falls der Datenbankabruf kurzfristig nicht verfügbar ist. Dadurch kann die alte `assets/valdara-map.jpg` nicht mehr als Kartenquelle zurückfallen.
