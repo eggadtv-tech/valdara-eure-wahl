@@ -293,9 +293,8 @@ loadMapFromSupabase();
 loadPeoplesFromSupabase();
 
 weatherToggle?.addEventListener('click', () => {
-  const visible = mapView.querySelector('.map-weather');
-  mapView.classList.toggle('weather-hidden', Boolean(visible));
-  weatherToggle.classList.toggle('active', !visible);
+  const hidden = mapView.classList.toggle('weather-hidden');
+  weatherToggle.classList.toggle('active', !hidden);
 });
 
 const menu=document.querySelector('#menuBtn'); const nav=document.querySelector('#mainNav');
