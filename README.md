@@ -37,3 +37,8 @@ Korrektur v25.3.1 (2026-10-09): Die Zoomansicht skaliert die bestehende Kartenin
 - Der Zoom verschiebt und skaliert ausschließlich die bestehende `#mapView`-Instanz (Kartenbild plus Orts-/Wettermarker).
 - Der rechte Beschreibungsbereich bzw. sonstige Seiteninhalte werden nicht in den Zoomcontainer verschoben.
 - Keine neue Karte, kein Bild-Reload, keine SQL-Änderungen und keine Neuberechnung von Orten oder Wetter.
+
+## Datenschutzseite
+- Neue Datei: `datenschutz.html`
+- Nach dem Deployment ist sie voraussichtlich unter `/datenschutz.html` erreichbar.
+- Vor dem Eintragen bei Meta bitte die Platzhalter für verantwortliche Person/Organisation und Anschrift in `datenschutz.html` ausfüllen und die tatsächlich verwendeten Dienste/Speicherfristen prüfen.
