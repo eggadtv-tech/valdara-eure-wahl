@@ -62,3 +62,6 @@
 .map-weather-legend.visible{display:flex}
 .map-weather-legend b{font-size:11px;color:var(--gold2);margin-right:2px}
 @media(max-width:900px){.map-top-actions{gap:8px}.map-weather-legend{display:none!important}.map-weather{padding:2px 4px}.map-weather .weather-temp{display:none}}
+
+/* Wetter-Hover: darunterliegende Ortslabels ausblenden, Positionen bleiben unverändert. */
+.map-view:has(.map-weather:hover) .map-marker:hover .marker-label{opacity:0!important;visibility:hidden!important}
