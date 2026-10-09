@@ -200,15 +200,31 @@ function renderWeatherLayer(rows) {
 }
 
 async function loadWeatherForFeatures() {
-  // Landschaftswetter aus allen aktiven Echtzeit-Referenzpunkten berechnen.
-  // Die sieben Landschaften werden auf ihren echten Kartenpositionen angezeigt.
-  const [areas, features, referencePoints, liveWeather, weatherTypes] = await Promise.all([
-    supabaseGet('weather_areas?select=id,geometry&is_active=eq.true'),
-    supabaseGet('geographic_features?select=id,name,feature_type,map_x,map_y&is_active=eq.true&is_visible=eq.true'),
-    supabaseGet('weather_reference_coordinates?select=weather_area_id,reference_point,valdara_x,valdara_y'),
-    supabaseGet('world_weather?select=weather_area_id,weather_type_id,temperature,wind_speed,precipitation,intensity&source=eq.realtime&is_active=eq.true'),
-    supabaseGet('weather_types?select=id,weather_key,display_name&is_active=eq.true')
-  ]);
+  // Landschaftswetter direkt auf den Kartenpositionen der geografischen Features.
+  // Fehler einer einzelnen API-Abfrage dürfen die komplette Wetterebene nicht verhindern.
+  const safeGet = async (path, label) => {
+    try {
+      return await supabaseGet(path);
+    } catch (error) {
+      console.error(`Landschaftswetter: ${label} konnte nicht geladen werden:`, error);
+      return null;
+    }
+  };
+
+  const [areasResult, featuresResult, refsResult, weatherResult, typesResult] =
+    await Promise.all([
+      safeGet('weather_areas?select=id,geometry&is_active=eq.true', 'weather_areas'),
+      safeGet('geographic_features?select=id,name,feature_type,map_x,map_y&is_active=eq.true', 'geographic_features'),
+      safeGet('weather_reference_coordinates?select=weather_area_id,reference_point,valdara_x,valdara_y', 'weather_reference_coordinates'),
+      safeGet('world_weather?select=weather_area_id,weather_type_id,temperature,wind_speed,precipitation,intensity&source=eq.realtime&is_active=eq.true', 'world_weather'),
+      safeGet('weather_types?select=id,weather_key,display_name&is_active=eq.true', 'weather_types')
+    ]);
+
+  const areas = areasResult || [];
+  const features = featuresResult || [];
+  const referencePoints = refsResult || [];
+  const liveWeather = weatherResult || [];
+  const weatherTypes = typesResult || [];
 
   const referenceAreas = areas.filter(area =>
     area.geometry?.type === 'weather_reference_point'
@@ -216,31 +232,51 @@ async function loadWeatherForFeatures() {
   const landscapeAreas = referenceAreas.filter(area =>
     area.geometry?.geographic_feature_id
   );
-  const featureById = Object.fromEntries(features.map(feature => [feature.id, feature]));
-  const referenceByAreaId = Object.fromEntries(referencePoints.map(point => [point.weather_area_id, point]));
-  const weatherByAreaId = Object.fromEntries(liveWeather.map(weather => [weather.weather_area_id, weather]));
-  const typeById = Object.fromEntries(weatherTypes.map(type => [type.id, type]));
 
-  // Alle 25 Punkte nehmen an der Interpolation teil, nicht nur die sieben neuen.
+  if (!landscapeAreas.length) {
+    console.warn('Landschaftswetter: keine Referenzpunkte mit geographic_feature_id gefunden.');
+    return [];
+  }
+
+  const featureById = Object.fromEntries(features.map(feature => [String(feature.id), feature]));
+  const referenceByAreaId = Object.fromEntries(referencePoints.map(point => [String(point.weather_area_id), point]));
+  const weatherByAreaId = Object.fromEntries(liveWeather.map(weather => [String(weather.weather_area_id), weather]));
+  const typeById = Object.fromEntries(weatherTypes.map(type => [String(type.id), type]));
+
+  // Alle Referenzpunkte mit Live-Wetter verwenden. Für die sieben neuen Punkte
+  // sind die direkten Kartenkoordinaten zusätzlich in geometry hinterlegt.
   const usableReferences = referenceAreas.map(area => {
-    const reference = referenceByAreaId[area.id];
-    const weather = weatherByAreaId[area.id];
-    const type = weather ? typeById[weather.weather_type_id] : null;
-    if (!reference || !weather || !type) return null;
-    return { area, reference, weather, type };
+    const reference = referenceByAreaId[String(area.id)] || {
+      weather_area_id: area.id,
+      reference_point: area.name,
+      valdara_x: area.geometry?.valdara_x,
+      valdara_y: area.geometry?.valdara_y
+    };
+    const weather = weatherByAreaId[String(area.id)];
+    const type = weather ? typeById[String(weather.weather_type_id)] : null;
+    const x = Number(reference.valdara_x);
+    const y = Number(reference.valdara_y);
+
+    if (!weather || !type || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return { area, reference: { ...reference, valdara_x: x, valdara_y: y }, weather, type };
   }).filter(Boolean);
 
-  return landscapeAreas.map(area => {
-    const feature = featureById[area.geometry.geographic_feature_id];
-    if (!feature) return null;
+  const result = landscapeAreas.map(area => {
+    const featureId = String(area.geometry.geographic_feature_id);
+    const feature = featureById[featureId];
 
-    const x = Number(feature.map_x);
-    const y = Number(feature.map_y);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    // Die Landschaft ist eine echte geographic_feature; ihre gespeicherte
+    // Kartenposition ist die verbindliche Position des Wetterzeichens.
+    const x = Number(feature?.map_x ?? area.geometry.valdara_x);
+    const y = Number(feature?.map_y ?? area.geometry.valdara_y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      console.warn(`Landschaftswetter: Kartenkoordinaten fehlen für ${area.name}`);
+      return null;
+    }
 
     const candidates = usableReferences.map(item => {
-      const dx = x - Number(item.reference.valdara_x);
-      const dy = y - Number(item.reference.valdara_y);
+      const dx = x - item.reference.valdara_x;
+      const dy = y - item.reference.valdara_y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       return {
         ...item,
@@ -248,12 +284,40 @@ async function loadWeatherForFeatures() {
       };
     }).filter(item => Number.isFinite(item.rawWeight) && item.rawWeight > 0);
 
-    const rawTotal = candidates.reduce((sum, item) => sum + item.rawWeight, 0);
-    if (!candidates.length || rawTotal <= 0) return null;
+    // Wenn keine Referenzpunkte mit gültigen Kartenkoordinaten verfügbar sind,
+    // zumindest das eigene Echtzeitwetter der Landschaft verwenden.
+    if (!candidates.length) {
+      const ownWeather = weatherByAreaId[String(area.id)];
+      const ownType = ownWeather ? typeById[String(ownWeather.weather_type_id)] : null;
+      if (!ownWeather || !ownType) {
+        console.warn(`Landschaftswetter: keine verwendbaren Wetterdaten für ${area.name}`);
+        return null;
+      }
+      return {
+        location_id: featureId,
+        locations: {
+          name: feature?.name || area.geometry.feature_name || area.name,
+          map_x: x,
+          map_y: y,
+          location_type: feature?.feature_type || area.geometry.feature_type
+        },
+        temperature: ownWeather.temperature,
+        wind_speed: ownWeather.wind_speed,
+        precipitation: ownWeather.precipitation,
+        dominant_weather: ownType.weather_key,
+        dominant_weather_name: ownType.display_name,
+        dominant_weather_score: 1,
+        weather_transition: 'klar',
+        is_landscape_weather: true
+      };
+    }
+
+    const totalWeight = candidates.reduce((sum, item) => sum + item.rawWeight, 0);
+    if (!Number.isFinite(totalWeight) || totalWeight <= 0) return null;
 
     const weighted = candidates.map(item => ({
       ...item,
-      weight: item.rawWeight / rawTotal
+      weight: item.rawWeight / totalWeight
     }));
 
     const weightedAverage = field => weighted.reduce(
@@ -264,9 +328,7 @@ async function loadWeatherForFeatures() {
     const weatherScores = {};
     weighted.forEach(item => {
       const key = item.type.weather_key;
-      if (!weatherScores[key]) {
-        weatherScores[key] = { score: 0, name: item.type.display_name };
-      }
+      if (!weatherScores[key]) weatherScores[key] = { score: 0, name: item.type.display_name };
       weatherScores[key].score += item.weight;
     });
 
@@ -275,12 +337,12 @@ async function loadWeatherForFeatures() {
     if (!dominant) return null;
 
     return {
-      location_id: feature.id,
+      location_id: featureId,
       locations: {
-        name: feature.name,
+        name: feature?.name || area.geometry.feature_name || area.name,
         map_x: x,
         map_y: y,
-        location_type: feature.feature_type
+        location_type: feature?.feature_type || area.geometry.feature_type
       },
       temperature: weightedAverage('temperature'),
       wind_speed: weightedAverage('wind_speed'),
@@ -292,9 +354,13 @@ async function loadWeatherForFeatures() {
         ? 'klar'
         : dominant[1].score >= 0.45
           ? 'Übergang'
-          : 'stark gemischt'
+          : 'stark gemischt',
+      is_landscape_weather: true
     };
   }).filter(Boolean);
+
+  console.info(`Landschaftswetter: ${result.length} Landschaften gerendert`, result);
+  return result;
 }
 
 async function loadWeatherForMap() {
@@ -331,6 +397,9 @@ async function loadWeatherForMap() {
       `Welt aktiv · Wetter aktuell · ${locationRows.length} Orte · ${featureRows.length} Landschaften`,
       true
     );
+  }
+  if (!featureRows.length) {
+    console.warn('Landschaftswetter: keine Wetter-Badges erzeugt. Prüfe die Fehlermeldungen der einzelnen Supabase-Abfragen oben.');
   }
 }
 
