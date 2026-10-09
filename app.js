@@ -199,6 +199,52 @@ function renderWeatherLayer(rows) {
   applyWeatherVisibility();
 }
 
+async function loadLandscapeWeatherForMap() {
+  if (!hasSupabaseConfig()) return 0;
+  try {
+    // Separate Ebene: Die bestehende interpolierte Wetterebene für 115 Orte bleibt unverändert.
+    const rows = await supabaseGet(
+      `world_weather?select=temperature,wind_speed,precipitation,source,is_active,weather_areas(name,geometry),weather_types(weather_key)&source=eq.realtime&is_active=eq.true`
+    );
+    const landscapeRows = rows.filter(row => {
+      const area = Array.isArray(row.weather_areas) ? row.weather_areas[0] : row.weather_areas;
+      const geometry = area?.geometry;
+      return geometry?.type === 'weather_reference_point'
+        && Boolean(geometry?.geographic_feature_id)
+        && Number.isFinite(Number(geometry?.valdara_x))
+        && Number.isFinite(Number(geometry?.valdara_y));
+    });
+
+    landscapeRows.forEach(row => {
+      const area = Array.isArray(row.weather_areas) ? row.weather_areas[0] : row.weather_areas;
+      const geometry = area.geometry;
+      const weatherType = Array.isArray(row.weather_types) ? row.weather_types[0] : row.weather_types;
+      const key = String(weatherType?.weather_key || 'unknown');
+      const visual = weatherVisual(key);
+      const badge = document.createElement('button');
+      badge.type = 'button';
+      badge.className = `map-weather map-weather-landscape weather-${key.replace(/[^a-z0-9_-]/gi,'')}`;
+      // geographic_features / valdara_x,y verwenden 0–1000; die Karte verwendet 0–5000.
+      const x = Number(geometry.valdara_x) * 5;
+      const y = Number(geometry.valdara_y) * 5;
+      badge.style.left = `${Math.max(0, Math.min(5000, x)) / 50}%`;
+      badge.style.top = `${Math.max(0, Math.min(5000, y)) / 50}%`;
+      badge.style.setProperty('--weather-color', visual.color);
+      badge.setAttribute('aria-label', `${area.name || 'Landschaft'}, ${key}, ${weatherTemperature(row.temperature)}`);
+      badge.title = `${area.name || 'Landschaft'} · ${key} · ${weatherTemperature(row.temperature)}`;
+      badge.innerHTML = `<span class="weather-icon">${visual.icon}</span><span class="weather-temp">${weatherTemperature(row.temperature)}</span>`;
+      badge.addEventListener('click', event => event.stopPropagation());
+      mapView.appendChild(badge);
+    });
+    applyWeatherVisibility();
+    return landscapeRows.length;
+  } catch (error) {
+    // Die optionale Landschaftsebene darf das vorhandene Wetter niemals entfernen.
+    console.warn('Landschaftswetter konnte nicht geladen werden:', error);
+    return 0;
+  }
+}
+
 async function loadWeatherForMap() {
   if (!hasSupabaseConfig()) return;
   try {
@@ -214,7 +260,8 @@ async function loadWeatherForMap() {
       rows = weatherRows.map(row => ({...row, locations: byId[row.location_id] || null}));
     }
     renderWeatherLayer(rows);
-    if (rows.length) setMapStatus(`Welt aktiv · Wetter aktuell · ${rows.length} Orte`, true);
+    const landscapeCount = await loadLandscapeWeatherForMap();
+    if (rows.length) setMapStatus(`Welt aktiv · Wetter aktuell · ${rows.length} Orte · ${landscapeCount} Landschaften`, true);
   } catch (error) {
     console.warn('Wetterebene konnte nicht geladen werden:', error);
     renderWeatherLayer([]);
