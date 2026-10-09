@@ -199,25 +199,138 @@ function renderWeatherLayer(rows) {
   applyWeatherVisibility();
 }
 
+async function loadWeatherForFeatures() {
+  // Landschaftswetter aus allen aktiven Echtzeit-Referenzpunkten berechnen.
+  // Die sieben Landschaften werden auf ihren echten Kartenpositionen angezeigt.
+  const [areas, features, referencePoints, liveWeather, weatherTypes] = await Promise.all([
+    supabaseGet('weather_areas?select=id,geometry&is_active=eq.true'),
+    supabaseGet('geographic_features?select=id,name,feature_type,map_x,map_y&is_active=eq.true&is_visible=eq.true'),
+    supabaseGet('weather_reference_coordinates?select=weather_area_id,reference_point,valdara_x,valdara_y'),
+    supabaseGet('world_weather?select=weather_area_id,weather_type_id,temperature,wind_speed,precipitation,intensity&source=eq.realtime&is_active=eq.true'),
+    supabaseGet('weather_types?select=id,weather_key,display_name&is_active=eq.true')
+  ]);
+
+  const referenceAreas = areas.filter(area =>
+    area.geometry?.type === 'weather_reference_point'
+  );
+  const landscapeAreas = referenceAreas.filter(area =>
+    area.geometry?.geographic_feature_id
+  );
+  const featureById = Object.fromEntries(features.map(feature => [feature.id, feature]));
+  const referenceByAreaId = Object.fromEntries(referencePoints.map(point => [point.weather_area_id, point]));
+  const weatherByAreaId = Object.fromEntries(liveWeather.map(weather => [weather.weather_area_id, weather]));
+  const typeById = Object.fromEntries(weatherTypes.map(type => [type.id, type]));
+
+  // Alle 25 Punkte nehmen an der Interpolation teil, nicht nur die sieben neuen.
+  const usableReferences = referenceAreas.map(area => {
+    const reference = referenceByAreaId[area.id];
+    const weather = weatherByAreaId[area.id];
+    const type = weather ? typeById[weather.weather_type_id] : null;
+    if (!reference || !weather || !type) return null;
+    return { area, reference, weather, type };
+  }).filter(Boolean);
+
+  return landscapeAreas.map(area => {
+    const feature = featureById[area.geometry.geographic_feature_id];
+    if (!feature) return null;
+
+    const x = Number(feature.map_x);
+    const y = Number(feature.map_y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+
+    const candidates = usableReferences.map(item => {
+      const dx = x - Number(item.reference.valdara_x);
+      const dy = y - Number(item.reference.valdara_y);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return {
+        ...item,
+        rawWeight: distance === 0 ? 1 : 1 / Math.pow(distance, 2)
+      };
+    }).filter(item => Number.isFinite(item.rawWeight) && item.rawWeight > 0);
+
+    const rawTotal = candidates.reduce((sum, item) => sum + item.rawWeight, 0);
+    if (!candidates.length || rawTotal <= 0) return null;
+
+    const weighted = candidates.map(item => ({
+      ...item,
+      weight: item.rawWeight / rawTotal
+    }));
+
+    const weightedAverage = field => weighted.reduce(
+      (sum, item) => sum + (Number(item.weather[field]) || 0) * item.weight,
+      0
+    );
+
+    const weatherScores = {};
+    weighted.forEach(item => {
+      const key = item.type.weather_key;
+      if (!weatherScores[key]) {
+        weatherScores[key] = { score: 0, name: item.type.display_name };
+      }
+      weatherScores[key].score += item.weight;
+    });
+
+    const dominant = Object.entries(weatherScores)
+      .sort((a, b) => b[1].score - a[1].score)[0];
+    if (!dominant) return null;
+
+    return {
+      location_id: feature.id,
+      locations: {
+        name: feature.name,
+        map_x: x,
+        map_y: y,
+        location_type: feature.feature_type
+      },
+      temperature: weightedAverage('temperature'),
+      wind_speed: weightedAverage('wind_speed'),
+      precipitation: weightedAverage('precipitation'),
+      dominant_weather: dominant[0],
+      dominant_weather_name: dominant[1].name,
+      dominant_weather_score: dominant[1].score,
+      weather_transition: dominant[1].score >= 0.70
+        ? 'klar'
+        : dominant[1].score >= 0.45
+          ? 'Übergang'
+          : 'stark gemischt'
+    };
+  }).filter(Boolean);
+}
+
 async function loadWeatherForMap() {
   if (!hasSupabaseConfig()) return;
+
+  let locationRows = [];
+  let featureRows = [];
+
   try {
-    let rows;
     try {
-      rows = await supabaseGet(`location_weather?select=location_id,temperature,wind_speed,precipitation,dominant_weather,dominant_weather_name,dominant_weather_score,weather_transition,locations(name,map_x,map_y,location_type)&is_active=eq.true&source=eq.interpolated`);
+      locationRows = await supabaseGet(`location_weather?select=location_id,temperature,wind_speed,precipitation,dominant_weather,dominant_weather_name,dominant_weather_score,weather_transition,locations(name,map_x,map_y,location_type)&is_active=eq.true&source=eq.interpolated`);
     } catch (embeddedError) {
       const weatherRows = await supabaseGet(`location_weather?select=location_id,temperature,wind_speed,precipitation,dominant_weather,dominant_weather_name,dominant_weather_score,weather_transition&is_active=eq.true&source=eq.interpolated`);
       const ids = [...new Set(weatherRows.map(row => row.location_id).filter(Boolean))];
       if (!ids.length) throw embeddedError;
       const locations = await supabaseGet(`locations?select=id,name,map_x,map_y,location_type&id=in.(${ids.map(id => encodeURIComponent(id)).join(',')})&is_active=eq.true`);
       const byId = Object.fromEntries(locations.map(location => [location.id, location]));
-      rows = weatherRows.map(row => ({...row, locations: byId[row.location_id] || null}));
+      locationRows = weatherRows.map(row => ({...row, locations: byId[row.location_id] || null}));
     }
-    renderWeatherLayer(rows);
-    if (rows.length) setMapStatus(`Welt aktiv · Wetter aktuell · ${rows.length} Orte`, true);
   } catch (error) {
-    console.warn('Wetterebene konnte nicht geladen werden:', error);
-    renderWeatherLayer([]);
+    console.warn('Ortswetter konnte nicht geladen werden:', error);
+  }
+
+  try {
+    featureRows = await loadWeatherForFeatures();
+  } catch (error) {
+    console.warn('Landschaftswetter konnte nicht geladen werden:', error);
+  }
+
+  renderWeatherLayer([...locationRows, ...featureRows]);
+
+  if (locationRows.length || featureRows.length) {
+    setMapStatus(
+      `Welt aktiv · Wetter aktuell · ${locationRows.length} Orte · ${featureRows.length} Landschaften`,
+      true
+    );
   }
 }
 
