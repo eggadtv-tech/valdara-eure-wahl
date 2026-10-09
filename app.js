@@ -267,12 +267,18 @@ async function loadWeatherForFeatures() {
 
     // Die Landschaft ist eine echte geographic_feature; ihre gespeicherte
     // Kartenposition ist die verbindliche Position des Wetterzeichens.
-    const x = Number(feature?.map_x ?? area.geometry.valdara_x);
-    const y = Number(feature?.map_y ?? area.geometry.valdara_y);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    // geographic_features nutzt Kartenkoordinaten im 0–1000-Raster.
+    // locations und weather_reference_coordinates nutzen das 0–5000-Raster
+    // der bestehenden Wetter-/Marker-Ebene. Für Vergleich und Anzeige daher
+    // die Landschaftskoordinaten auf dasselbe Raster skalieren.
+    const featureX = Number(feature?.map_x ?? area.geometry.valdara_x);
+    const featureY = Number(feature?.map_y ?? area.geometry.valdara_y);
+    if (!Number.isFinite(featureX) || !Number.isFinite(featureY)) {
       console.warn(`Landschaftswetter: Kartenkoordinaten fehlen für ${area.name}`);
       return null;
     }
+    const x = featureX * 5;
+    const y = featureY * 5;
 
     const candidates = usableReferences.map(item => {
       const dx = x - item.reference.valdara_x;
