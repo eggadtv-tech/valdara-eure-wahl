@@ -41,6 +41,17 @@
     <div class="map-top"><span>VALDARA · ÜBERSICHT</span><div class="map-top-actions"><button id="weatherToggle" class="map-weather-toggle active" type="button">☁ Wetter</button><span class="map-status" id="mapStatus"><i></i> Karte wird geladen …</span></div></div>
     <div class="map-view" id="mapView">
       <img id="valdaraMap" src="https://vunvrgopzcbbxcxyjnxp.supabase.co/storage/v1/object/public/valdara-media/maps/continents/Valdara_Master_Map_Wegenetz_v4_Siedlungsnetz.png?v=20261008-5000" alt="Karte von Valdara">
+      <div class="map-sector-grid" id="mapSectorGrid" aria-label="Kartenausschnitt auswählen">
+        <button type="button" data-sector="0" aria-label="Nordwestlichen Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="1" aria-label="Nördlichen mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="2" aria-label="Nordöstlichen Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="3" aria-label="Westlichen mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="4" aria-label="Mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="5" aria-label="Östlichen mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="6" aria-label="Südwestlichen Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="7" aria-label="Südlichen mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="8" aria-label="Südöstlichen Kartenausschnitt vergrößern"><span>⌕</span></button>
+      </div>
     </div>
     <div class="map-bottom"><span>Interaktive Karte · Echtzeit-Wetter</span><div id="weatherLegend" class="map-weather-legend"><span><b>☀</b> Klar</span><span><b>☁</b> Bewölkt</span><span><b>☂</b> Regen</span><span><b>❄</b> Schnee</span><span><b>ϟ</b> Gewitter</span></div><a href="#welt-detail">Karte öffnen →</a></div>
   </div>
@@ -89,6 +100,14 @@
   <div class="people-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="peopleModalTitle">
     <button class="people-modal-close" id="peopleModalClose" type="button" aria-label="Fenster schließen">×</button>
     <div id="peopleModalContent"></div>
+  </div>
+</div>
+
+<div class="map-zoom-modal" id="mapZoomModal" aria-hidden="true">
+  <div class="map-zoom-dialog" role="dialog" aria-modal="true" aria-label="Vergrößerter Kartenausschnitt">
+    <div class="map-zoom-toolbar"><span id="mapZoomTitle">VALDARA · KARTENAUSSCHNITT</span><button class="people-modal-close" id="mapZoomClose" type="button" aria-label="Vergrößerung schließen">×</button></div>
+    <div class="map-zoom-canvas" id="mapZoomCanvas"></div>
+    <div class="map-zoom-footer"><span>Dieselbe Karte · Orte und Wetter bleiben an ihren Positionen</span><button type="button" id="mapZoomBack">Zur Gesamtkarte zurück</button></div>
   </div>
 </div>
 

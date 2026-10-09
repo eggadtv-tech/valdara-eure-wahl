@@ -66,5 +66,26 @@
 /* Wetter-Hover: darunterliegende Ortslabels ausblenden, Positionen bleiben unverändert. */
 .map-view:has(.map-weather:hover) .map-marker:hover .marker-label{opacity:0!important;visibility:hidden!important}
 
-/* Landschaftswetter: dezente Abgrenzung von den bestehenden Ortswerten. */
-.map-weather-landscape{border-style:dashed;box-shadow:0 0 10px rgba(125,184,141,.25),0 3px 10px rgba(0,0,0,.45)}
+
+/* Valdara v25: 3x3-Lupe auf derselben Karteninstanz (keine zweite Karte/kein Reload) */
+.map-view{isolation:isolate}
+.map-sector-grid{position:absolute;inset:0;z-index:20;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));opacity:0;transition:opacity .2s;pointer-events:none}
+.map-view:hover .map-sector-grid,.map-sector-grid:focus-within{opacity:1;pointer-events:auto}
+.map-sector-grid button{display:flex;align-items:center;justify-content:center;border:1px solid rgba(242,209,138,.0);background:rgba(3,9,17,0);cursor:zoom-in;transition:background .18s,border-color .18s;min-width:0;min-height:0}
+.map-sector-grid button:hover,.map-sector-grid button:focus-visible{background:rgba(3,9,17,.16);border-color:rgba(242,209,138,.75);outline:none}
+.map-sector-grid button span{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid rgba(242,209,138,.8);border-radius:50%;background:rgba(3,9,17,.82);color:var(--gold2);font-size:25px;line-height:1;opacity:0;transform:scale(.8);transition:.18s}
+.map-sector-grid button:hover span,.map-sector-grid button:focus-visible span{opacity:1;transform:scale(1)}
+.map-zoom-modal{position:fixed;inset:0;z-index:120;background:rgba(1,5,10,.9);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:clamp(8px,2vw,28px)}
+.map-zoom-modal.open{display:flex}
+.map-zoom-dialog{width:min(1500px,98vw);display:flex;flex-direction:column;background:linear-gradient(145deg,rgba(12,24,40,.99),rgba(4,10,18,.99));border:1px solid var(--line);box-shadow:0 30px 100px rgba(0,0,0,.7);overflow:hidden}
+.map-zoom-toolbar,.map-zoom-footer{min-height:48px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#d8dee7;font-size:10px;letter-spacing:.12em}
+.map-zoom-toolbar{border-bottom:1px solid rgba(215,173,88,.18)}
+.map-zoom-toolbar .people-modal-close{position:static;flex:0 0 40px}
+.map-zoom-canvas{width:100%;aspect-ratio:3/2;overflow:hidden;position:relative;background:#07111e;touch-action:pan-y}
+.map-zoom-canvas .map-view{width:300%;height:auto;aspect-ratio:3/2;max-width:none;transform-origin:top left;transform:translate(var(--sector-x,0%),var(--sector-y,0%));}
+.map-zoom-canvas .map-sector-grid{display:none!important}
+.map-zoom-canvas .map-view .map-weather .weather-temp{display:inline}
+.map-zoom-footer{border-top:1px solid rgba(215,173,88,.18);letter-spacing:.03em;color:var(--muted)}
+.map-zoom-footer button{border:1px solid rgba(215,173,88,.5);background:rgba(215,173,88,.08);padding:8px 12px;color:var(--gold2);cursor:pointer;white-space:nowrap}
+.map-zoom-footer button:hover{background:rgba(215,173,88,.16)}
+@media(max-width:700px){.map-sector-grid{opacity:.65;pointer-events:auto}.map-sector-grid button span{opacity:.85;width:28px;height:28px;font-size:21px}.map-zoom-modal{padding:6px}.map-zoom-dialog{width:100%;}.map-zoom-toolbar,.map-zoom-footer{padding:8px;font-size:9px}.map-zoom-canvas{aspect-ratio:3/2}.map-zoom-canvas .map-view{width:300%;aspect-ratio:3/2}.map-zoom-footer{align-items:flex-start;flex-direction:column}.map-zoom-footer button{width:100%}}

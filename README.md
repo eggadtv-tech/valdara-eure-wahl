@@ -1,33 +1,24 @@
-# VALDARA – Eure Wahl · Frontend Master
+# VALDARA – Frontend Master v25 (09.10.2026)
 
-## Stand
-Masterkarte 5000×5000, Supabase-Daten, Städte, Dörfer und Reichsmarker.
+## Master-Basis
+Basiert auf `VALDARA_FRONTEND_MASTER_v24_WETTERPUNKTE_2026-10-09.zip`.
 
-## Neues flexibles System
-Das Frontend lädt `marker_styles` aus Supabase. Dadurch können Markerarten, Farben, Größen, Icons und Render-Modi (`point`, `area`, `line`) in der Datenbank gesteuert werden, ohne für jede neue Markerart den Frontend-Code zu ändern.
+## Neu in v25: 3×3-Kartenlupe
+- Die bestehende Weltkarte wird in neun logisch auswählbare Bereiche (3×3) aufgeteilt.
+- Über der Gesamtkarte erscheinen beim Darüberfahren die neun Lupenbereiche; mobil sind sie antippbar.
+- Beim Auswählen wird dieselbe `#mapView`-DOM-Instanz vorübergehend in ein Zoomfenster verschoben und per CSS vergrößert/verschoben.
+- Es wird kein neues Kartenbild angefordert und keine zweite Karte geladen.
+- Ortsmarker und Wetter-Badges bleiben dieselben DOM-Elemente an denselben Koordinaten; es werden keine Wetter-/Ortsdaten neu berechnet.
+- Schließen oder Escape setzt exakt dieselbe Karteninstanz an ihren ursprünglichen Platz zurück.
 
-Vorgesehene Typen:
-- Städte / Dörfer / Reich / Hauptstadt
-- Festung / Hafen / Tempel / Ruine / Oase / Höhle
-- Spieler / Mitspieler / NPC / Begleiter / Gegner / Boss
-- Quest / Quest-Ziel
-- Gefahren- und Monstergebiete
-- X1–X20 als freie Reserve
-- Wetter: Sonne, Bewölkung, Regen, Sturm, Gewitter, Schnee, Nebel, Hitze, Kälte, magisches Wetter
+## Bestehende Funktionen unverändert
+- Valdara-Karte mit vorhandener Supabase-Konfiguration.
+- Ortsmarker, Ortsdetails und Echtzeit-Wetter.
+- Die sieben unsichtbaren Wetterpunkte nutzen weiterhin den bestehenden `location_weather`-Pfad.
+- Keine SQL-Änderungen erforderlich.
 
-Gebiets- und Wetterflächen werden über die DB-Strukturen `map_areas` und `weather_states` vorbereitet. Realtime-Wetter kann später als `source='realtime'` gespeichert werden; Würfeländerungen als `source='dice'` bzw. in `weather_rolls`.
-
-
-## Echtzeit-Wetter auf der Karte
-
-Das Frontend lädt die aktiven interpolierten Wetterlagen aus `location_weather` und zeigt sie direkt an den vorhandenen Valdara-Orten auf der 5000×5000-Karte.
-
-- Datenquelle: `location_weather`
-- Grundlage: reale Open-Meteo-Daten über die 18 Wetter-Referenzpunkte
-- Interpolation: bestehende DB-Views/Funktion (`weather_location_current`, `refresh_location_weather()`)
-- Darstellung: Wetter-Symbol + Temperatur je Ort
-- Schaltfläche `☁ Wetter`: Wetterebene ein-/ausblendbar
-- Keine Änderung der bestehenden Orts-/Reichsmarker
-- Fallback auf eine zweite `locations`-Abfrage, falls Supabase-Relationen beim REST-Embed nicht verfügbar sind
-
-Die Frontend-Karte verwendet als aktuelle Fallback-Karte `Valdara_Master_Map_Wegenetz_v4_Siedlungsnetz.png`.
+## Dateien
+- `index.html`
+- `app.js`
+- `styles.css`
+- `supabase-config.js`
