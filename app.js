@@ -189,8 +189,8 @@ function renderWeatherLayer(rows) {
     badge.style.left = `${Math.max(0, Math.min(5000, x)) / 50}%`;
     badge.style.top = `${Math.max(0, Math.min(5000, y)) / 50}%`;
     badge.style.setProperty('--weather-color', visual.color);
-    badge.setAttribute('aria-label', `${location.name || 'Ort'}: ${row.dominant_weather_name || 'Wetter'}, ${weatherTemperature(row.temperature)}`);
-    badge.title = `${location.name || 'Ort'} · ${row.dominant_weather_name || 'Wetter'} · ${weatherTemperature(row.temperature)}`;
+    badge.setAttribute('aria-label', `${row.dominant_weather_name || 'Wetter'}, ${weatherTemperature(row.temperature)}`);
+    badge.title = `${row.dominant_weather_name || 'Wetter'} · ${weatherTemperature(row.temperature)}`;
     badge.innerHTML = `<span class="weather-icon">${visual.icon}</span><span class="weather-temp">${weatherTemperature(row.temperature)}</span>`;
     badge.addEventListener('click', event => event.stopPropagation());
     mapView.appendChild(badge);
