@@ -22,3 +22,5 @@ Basiert auf `VALDARA_FRONTEND_MASTER_v24_WETTERPUNKTE_2026-10-09.zip`.
 - `app.js`
 - `styles.css`
 - `supabase-config.js`
+
+Korrektur v25.1 (2026-10-09): Die Zoomansicht skaliert die bestehende Karteninstanz jetzt in Breite und Höhe auf 300 %. Dadurch entspricht jeder Ausschnitt einem Feld des 3x3-Rasters. SQL und Wetter-/Ortslogik bleiben unverändert.
