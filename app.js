@@ -296,18 +296,18 @@ function openPeople(person) {
 function closePeople(){ if(!peopleModal)return; peopleModal.classList.remove('open'); document.body.classList.remove('modal-open'); peopleModal.setAttribute('aria-hidden','true'); }
 function closeMapDetail(){ if(!mapDetailModal)return; mapDetailModal.classList.remove('open'); document.body.classList.remove('modal-open'); mapDetailModal.setAttribute('aria-hidden','true'); }
 
-const mapSectorNames = ['Nordwesten','Norden','Nordosten','Westen','Mitte','Osten','Südwesten','Süden','Südosten'];
+const mapSectorNames = ['Nordwesten','Nord-Nordwest','Norden','Nord-Nordost','Nordosten','West-Nord','Nordmitte','Nordost-Mitte','Ost-Nord','Ost-Nordost','Westen','Westmitte','Zentrum','Ostmitte','Osten','West-Süd','Südwest-Mitte','Südmitte','Südost-Mitte','Ost-Süd','Südwesten','Süd-Südwest','Süden','Süd-Südost','Südosten'];
 function openMapZoom(sector) {
   if (!mapZoomModal || !mapZoomCanvas || !mapView) return;
-  const index = Math.max(0, Math.min(8, Number(sector) || 0));
-  const col = index % 3;
-  const row = Math.floor(index / 3);
+  const index = Math.max(0, Math.min(24, Number(sector) || 0));
+  const col = index % 5;
+  const row = Math.floor(index / 5);
   if (!mapViewPlaceholder) {
     mapViewPlaceholder = document.createComment('Valdara map view placeholder');
     mapView.parentNode.insertBefore(mapViewPlaceholder, mapView);
   }
-  mapZoomCanvas.style.setProperty('--sector-x', `${-col * 33.333333}%`);
-  mapZoomCanvas.style.setProperty('--sector-y', `${-row * 33.333333}%`);
+  mapZoomCanvas.style.setProperty('--sector-x', `${-col * 20}%`);
+  mapZoomCanvas.style.setProperty('--sector-y', `${-row * 20}%`);
   mapZoomTitle.textContent = `VALDARA · ${mapSectorNames[index].toUpperCase()}`;
   mapView.classList.add('map-zoomed-view');
   mapZoomCanvas.appendChild(mapView);

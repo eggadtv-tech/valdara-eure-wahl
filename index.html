@@ -42,15 +42,31 @@
     <div class="map-view" id="mapView">
       <img id="valdaraMap" src="https://vunvrgopzcbbxcxyjnxp.supabase.co/storage/v1/object/public/valdara-media/maps/continents/Valdara_Master_Map_Wegenetz_v4_Siedlungsnetz.png?v=20261008-5000" alt="Karte von Valdara">
       <div class="map-sector-grid" id="mapSectorGrid" aria-label="Kartenausschnitt auswählen">
-        <button type="button" data-sector="0" aria-label="Nordwestlichen Kartenausschnitt vergrößern"><span>⌕</span></button>
-        <button type="button" data-sector="1" aria-label="Nördlichen mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
-        <button type="button" data-sector="2" aria-label="Nordöstlichen Kartenausschnitt vergrößern"><span>⌕</span></button>
-        <button type="button" data-sector="3" aria-label="Westlichen mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
-        <button type="button" data-sector="4" aria-label="Mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
-        <button type="button" data-sector="5" aria-label="Östlichen mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
-        <button type="button" data-sector="6" aria-label="Südwestlichen Kartenausschnitt vergrößern"><span>⌕</span></button>
-        <button type="button" data-sector="7" aria-label="Südlichen mittleren Kartenausschnitt vergrößern"><span>⌕</span></button>
-        <button type="button" data-sector="8" aria-label="Südöstlichen Kartenausschnitt vergrößern"><span>⌕</span></button>
+        <button type="button" data-sector="0" aria-label="Nordwestlichen Kartenausschnitt vergrößern" title="Nordwesten"><span>⌕</span></button>
+        <button type="button" data-sector="1" aria-label="Nördlich nordwestlichen Kartenausschnitt vergrößern" title="Nord-Nordwest"><span>⌕</span></button>
+        <button type="button" data-sector="2" aria-label="Nördlichen mittleren Kartenausschnitt vergrößern" title="Norden"><span>⌕</span></button>
+        <button type="button" data-sector="3" aria-label="Nördlich nordöstlichen Kartenausschnitt vergrößern" title="Nord-Nordost"><span>⌕</span></button>
+        <button type="button" data-sector="4" aria-label="Nordöstlichen Kartenausschnitt vergrößern" title="Nordosten"><span>⌕</span></button>
+        <button type="button" data-sector="5" aria-label="Westlich nördlichen Kartenausschnitt vergrößern" title="West-Nord"><span>⌕</span></button>
+        <button type="button" data-sector="6" aria-label="Nördlichen zentralen Kartenausschnitt vergrößern" title="Nordmitte"><span>⌕</span></button>
+        <button type="button" data-sector="7" aria-label="Nördlich östlichen Kartenausschnitt vergrößern" title="Nordost-Mitte"><span>⌕</span></button>
+        <button type="button" data-sector="8" aria-label="Östlich nördlichen Kartenausschnitt vergrößern" title="Ost-Nord"><span>⌕</span></button>
+        <button type="button" data-sector="9" aria-label="Östlich nordöstlichen Kartenausschnitt vergrößern" title="Ost-Nordost"><span>⌕</span></button>
+        <button type="button" data-sector="10" aria-label="Westlichen mittleren Kartenausschnitt vergrößern" title="Westen"><span>⌕</span></button>
+        <button type="button" data-sector="11" aria-label="Westlich zentralen Kartenausschnitt vergrößern" title="Westmitte"><span>⌕</span></button>
+        <button type="button" data-sector="12" aria-label="Mittleren Kartenausschnitt vergrößern" title="Zentrum"><span>⌕</span></button>
+        <button type="button" data-sector="13" aria-label="Östlich zentralen Kartenausschnitt vergrößern" title="Ostmitte"><span>⌕</span></button>
+        <button type="button" data-sector="14" aria-label="Östlichen mittleren Kartenausschnitt vergrößern" title="Osten"><span>⌕</span></button>
+        <button type="button" data-sector="15" aria-label="Westlich südlichen Kartenausschnitt vergrößern" title="West-Süd"><span>⌕</span></button>
+        <button type="button" data-sector="16" aria-label="Südwestlich zentralen Kartenausschnitt vergrößern" title="Südwest-Mitte"><span>⌕</span></button>
+        <button type="button" data-sector="17" aria-label="Südlichen zentralen Kartenausschnitt vergrößern" title="Südmitte"><span>⌕</span></button>
+        <button type="button" data-sector="18" aria-label="Südöstlich zentralen Kartenausschnitt vergrößern" title="Südost-Mitte"><span>⌕</span></button>
+        <button type="button" data-sector="19" aria-label="Östlich südlichen Kartenausschnitt vergrößern" title="Ost-Süd"><span>⌕</span></button>
+        <button type="button" data-sector="20" aria-label="Südwestlichen Kartenausschnitt vergrößern" title="Südwesten"><span>⌕</span></button>
+        <button type="button" data-sector="21" aria-label="Südlich südwestlichen Kartenausschnitt vergrößern" title="Süd-Südwest"><span>⌕</span></button>
+        <button type="button" data-sector="22" aria-label="Südlichen mittleren Kartenausschnitt vergrößern" title="Süden"><span>⌕</span></button>
+        <button type="button" data-sector="23" aria-label="Südlich südöstlichen Kartenausschnitt vergrößern" title="Süd-Südost"><span>⌕</span></button>
+        <button type="button" data-sector="24" aria-label="Südöstlichen Kartenausschnitt vergrößern" title="Südosten"><span>⌕</span></button>
       </div>
     </div>
     <div class="map-bottom"><span>Interaktive Karte · Echtzeit-Wetter</span><div id="weatherLegend" class="map-weather-legend"><span><b>☀</b> Klar</span><span><b>☁</b> Bewölkt</span><span><b>☂</b> Regen</span><span><b>❄</b> Schnee</span><span><b>ϟ</b> Gewitter</span></div><a href="#welt-detail">Karte öffnen →</a></div>
