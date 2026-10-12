@@ -480,3 +480,88 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
   refreshButton.addEventListener('click', load);
   load();
 })();
+
+
+// Geschichten-Seite: neueste YouTube-Folge oben, vollständiges Archiv darunter.
+async function loadStoryYouTubeVideos() {
+  const list = document.querySelector('#storyVideosList');
+  const status = document.querySelector('#storyVideosStatus');
+  const currentTitle = document.querySelector('#currentEpisodeTitle');
+  const currentDescription = document.querySelector('#currentEpisodeDescription');
+  const currentLink = document.querySelector('#currentEpisodeLink');
+  if (!list || !status) return;
+
+  const channelUrl = 'https://www.youtube.com/@ValdaraEureWahl';
+  const read = (row, keys) => {
+    for (const key of keys) {
+      const value = row?.[key];
+      if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+    }
+    return '';
+  };
+  const getVideoId = row => read(row, ['youtube_video_id','video_id','external_video_id','youtube_id','videoId','external_id']);
+  const getDate = row => read(row, ['published_at','publishedAt','published_date','release_date','created_at','createdAt']);
+  const getTitle = row => read(row, ['title','video_title','name','headline']) || 'Valdara – Eure Wahl';
+  const getDescription = row => read(row, ['description','summary','caption']);
+  const getUrl = row => {
+    const direct = read(row, ['video_url','youtube_url','url','watch_url','post_url']);
+    if (direct && /^https?:\/\//i.test(direct)) return direct;
+    const id = getVideoId(row);
+    if (id && !/^[0-9]+$/.test(id) && !id.includes(' ')) return `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+    return channelUrl;
+  };
+  const getThumbnail = row => {
+    const thumb = read(row, ['thumbnail_url','thumbnail','thumbnailUrl','image_url','preview_url']);
+    if (thumb && /^https?:\/\//i.test(thumb)) return thumb;
+    const id = getVideoId(row);
+    if (id && !/^[0-9]+$/.test(id) && !id.includes(' ')) return `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
+    return '';
+  };
+  const formatDate = value => {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}).format(date);
+  };
+  try {
+    if (!hasSupabaseConfig()) throw new Error('Supabase ist nicht konfiguriert.');
+    // Select * vermeidet eine harte Bindung an einzelne Spaltennamen des vorhandenen Masters.
+    const rows = await supabaseGet('youtube_videos?select=*&limit=200');
+    const videos = (Array.isArray(rows) ? rows : []).filter(row => {
+      const active = read(row, ['is_active','active','published','is_published']);
+      const statusValue = read(row, ['status','visibility']).toLowerCase();
+      return active.toLowerCase() !== 'false' && !['draft','deleted','private','unlisted'].includes(statusValue) && Boolean(getVideoId(row) || read(row, ['video_url','youtube_url','url','watch_url','post_url']));
+    });
+    videos.sort((a,b) => {
+      const da = new Date(getDate(a) || 0).getTime() || 0;
+      const db = new Date(getDate(b) || 0).getTime() || 0;
+      return db - da;
+    });
+    if (!videos.length) {
+      status.textContent = 'Noch keine YouTube-Videos in der Tabelle „youtube_videos“ gefunden.';
+      list.innerHTML = '<p class="story-videos-empty">Sobald die Videos in Supabase hinterlegt sind, erscheinen sie hier automatisch.</p>';
+      if (currentTitle) currentTitle.textContent = 'Noch keine Folge hinterlegt';
+      if (currentDescription) currentDescription.textContent = 'Die aktuelle Folge wird automatisch angezeigt, sobald ein veröffentlichtes Video in Supabase vorhanden ist.';
+      if (currentLink) currentLink.href = channelUrl;
+      return;
+    }
+    const newest = videos[0];
+    if (currentTitle) currentTitle.textContent = getTitle(newest);
+    if (currentDescription) currentDescription.textContent = getDescription(newest) || (formatDate(getDate(newest)) ? `Veröffentlicht am ${formatDate(getDate(newest))}.` : 'Die neueste veröffentlichte Folge auf YouTube.');
+    if (currentLink) currentLink.href = getUrl(newest);
+    // Archiv in chronologischer Reihenfolge: Folge 1 bis zur neuesten Folge.
+    const archive = [...videos].reverse();
+    list.innerHTML = archive.map((video, index) => {
+      const title = getTitle(video);
+      const date = formatDate(getDate(video));
+      const thumbnail = getThumbnail(video);
+      const description = getDescription(video);
+      return `<article class="story-video-card"><a class="story-video-thumb" href="${escapeHtml(getUrl(video))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(title)} auf YouTube ansehen">${thumbnail ? `<img src="${escapeHtml(thumbnail)}" alt="" loading="lazy">` : '<span class="story-video-play">▶</span>'}<span class="story-video-number">Folge ${index + 1}</span><span class="story-video-play">▶</span></a><div class="story-video-copy"><span class="eyebrow">${date ? escapeHtml(date) : 'VALDARA · EURE WAHL'}</span><h3>${escapeHtml(title)}</h3>${description ? `<p>${escapeHtml(description)}</p>` : ''}<a href="${escapeHtml(getUrl(video))}" target="_blank" rel="noopener noreferrer">Auf YouTube ansehen →</a></div></article>`;
+    }).join('');
+    status.textContent = `${videos.length} ${videos.length === 1 ? 'Folge' : 'Folgen'} gefunden · neueste Folge oben separat angezeigt`;
+  } catch (error) {
+    console.warn('YouTube-Folgen konnten nicht geladen werden:', error);
+    status.textContent = 'Die YouTube-Folgen konnten nicht aus Supabase geladen werden.';
+    list.innerHTML = `<p class="story-videos-empty">Bitte prüft, ob die Tabelle „youtube_videos“ öffentlich lesbar ist und die Videos dort eingetragen sind. <a href="${channelUrl}" target="_blank" rel="noopener noreferrer">Zum YouTube-Kanal →</a></p>`;
+  }
+}
+loadStoryYouTubeVideos();

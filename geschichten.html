@@ -92,8 +92,15 @@
 <section class="story-section section" id="geschichten">
   <div class="story-panel">
     <div><span class="eyebrow">DIE SERIE</span><h2>VALDARA – Eure Wahl</h2><p>Die Geschichte entsteht nicht nur durch das, was passiert. Sie entsteht durch das, wofür ihr euch entscheidet.</p><a class="glow-btn" href="#entscheidungen">Geschichte verfolgen <span>→</span></a></div>
-    <div class="episode-card"><span>AKTUELLE FOLGE</span><strong>Folge 2</strong><p>Welches Volk wirst du wählen?</p><div class="episode-line"><i></i><i></i><i></i><i></i></div></div>
+    <div class="episode-card" id="currentEpisodeCard"><span>AKTUELLE FOLGE</span><strong id="currentEpisodeTitle">Wird geladen …</strong><p id="currentEpisodeDescription">Die neueste veröffentlichte YouTube-Folge wird automatisch abgerufen.</p><a id="currentEpisodeLink" class="glow-btn" href="https://www.youtube.com/@ValdaraEureWahl" target="_blank" rel="noopener noreferrer">Folge ansehen →</a></div>
   </div>
+  <div class="section-heading story-archive-heading">
+    <span class="eyebrow">DIE GESAMTE REIHE</span>
+    <h2>Alle Folgen</h2>
+    <p>Hier findet ihr alle verfügbaren YouTube-Folgen von Folge 1 bis zur neuesten Folge. Die aktuelle Folge oben wird separat automatisch aktualisiert.</p>
+  </div>
+  <div id="storyVideosStatus" class="story-videos-status" role="status">YouTube-Folgen werden geladen …</div>
+  <div id="storyVideosList" class="story-videos-grid" aria-live="polite"></div>
 </section>
 
 <section class="decision section" id="entscheidungen">
