@@ -26,6 +26,53 @@ const mapDetailModal = document.querySelector('#mapDetailModal');
 const mapDetailContent = document.querySelector('#mapDetailContent');
 const weatherToggle = document.querySelector('#weatherToggle');
 const weatherLegend = document.querySelector('#weatherLegend');
+const VALDARA_WORLD_ID = 'd643c374-979b-4865-b65c-d8008c10932d';
+let worldClockConfig = { timezone: 'Europe/Berlin', time_mode: 'realtime', hours_per_day: 24, day_length_real_hours: 24 };
+let lightingTimer = null;
+
+function ensureLightingOverlay() {
+  if (!mapView || mapView.querySelector('.map-time-lighting')) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'map-time-lighting';
+  overlay.setAttribute('aria-hidden', 'true');
+  mapView.appendChild(overlay);
+}
+
+function updateMapLighting() {
+  if (!mapView) return;
+  ensureLightingOverlay();
+  const overlay = mapView.querySelector('.map-time-lighting');
+  if (!overlay) return;
+  let hour = new Date().getHours();
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {timeZone: worldClockConfig.timezone || 'Europe/Berlin', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date());
+    hour = Number(parts.find(part => part.type === 'hour')?.value ?? hour) + Number(parts.find(part => part.type === 'minute')?.value ?? 0) / 60;
+  } catch (error) { console.warn('Weltzeit-Zeitzone nicht lesbar; verwende lokale Zeit.', error); }
+  // Sanfte Dämmerung: hellster Abschnitt zwischen 09 und 16 Uhr, Nacht zwischen 22 und 04 Uhr.
+  let night = 0;
+  if (hour < 4 || hour >= 22) night = 0.42;
+  else if (hour < 7) night = 0.42 * (7 - hour) / 3;
+  else if (hour < 9) night = 0.10 * (9 - hour) / 2;
+  else if (hour >= 16 && hour < 19) night = 0.10 * (hour - 16) / 3;
+  else if (hour >= 19 && hour < 22) night = 0.10 + 0.32 * (hour - 19) / 3;
+  overlay.style.setProperty('--night-opacity', String(Math.max(0, Math.min(0.42, night))));
+  overlay.dataset.phase = hour < 5 || hour >= 21 ? 'night' : hour < 8 || hour >= 18 ? 'dusk' : 'day';
+}
+
+async function loadWorldClockConfig() {
+  if (!hasSupabaseConfig()) { updateMapLighting(); return; }
+  try {
+    const rows = await supabaseGet(`world_states?select=state_value&world_id=eq.${VALDARA_WORLD_ID}&name=eq.${encodeURIComponent('Valdara – Weltzeit')}&state_type=eq.time&status=eq.active&limit=1`);
+    if (rows[0]?.state_value && typeof rows[0].state_value === 'object') {
+      worldClockConfig = {...worldClockConfig, ...rows[0].state_value};
+    }
+  } catch (error) {
+    console.warn('Weltzeit konnte nicht geladen werden; verwende Europe/Berlin als Fallback.', error);
+  }
+  updateMapLighting();
+  if (lightingTimer) clearInterval(lightingTimer);
+  lightingTimer = setInterval(updateMapLighting, 60_000);
+}
 
 const detailSections = [
   ['overview','Überblick'],
@@ -110,24 +157,24 @@ async function openMapMarker(marker) {
 let markerStyles = {};
 
 function resolveMarkerStyle(marker) {
-  // Der explizite Marker-Typ aus map_markers ist maßgeblich.
-  // location_type darf z. B. "group" nicht in "city" umklassifizieren.
-  const code = (marker.realm_id && !marker.location_id)
-    ? 'realm'
-    : (marker.marker_type || 'custom');
+  const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
+  let code = marker.marker_type || 'custom';
+
+  // Realm-Marker bleiben custom + realm_id.
+  if (marker.realm_id && !marker.location_id) code = 'realm';
+  else if (locationType) code = locationType;
 
   if (markerStyles[code]) return markerStyles[code];
+  if (markerStyles[marker.marker_type]) return markerStyles[marker.marker_type];
 
-  // Fallbacks nur dann nutzen, wenn kein aktiver SQL-Stil für diesen Typ geladen wurde.
+  // Robuste Fallbacks: bestehende Marker funktionieren auch ohne marker_styles.
   const fallback = {
     city: {color:'#F2C94C', border_color:'#6f5310', size:10, icon:'', render_mode:'point', opacity:1},
     village: {color:'#8B5A2B', border_color:'#5C3718', size:5, icon:'', render_mode:'point', opacity:1},
-    group: {color:'#E53935', border_color:'#8B0000', size:8, icon:'', render_mode:'point', opacity:1},
-    location: {color:'#D7AD58', border_color:'#222', size:8, icon:'', render_mode:'point', opacity:1},
     custom: {color:'#D7AD58', border_color:'#222', size:11, icon:'', render_mode:'point', opacity:1},
     realm: {color:'#D7AD58', border_color:'#222', size:12, icon:'', render_mode:'point', opacity:1}
   };
-  return fallback[code] || fallback.custom;
+  return fallback[code] || fallback[marker.marker_type] || fallback.custom;
 }
 
 function applyMarkerStyle(button, style) {
@@ -235,25 +282,32 @@ function renderMapMarkers(markers) {
     const button = document.createElement('button');
     button.type = 'button';
     const markerClass = String(marker.marker_type || 'location').replace(/[^a-z0-9_-]/gi,'');
-    const style = resolveMarkerStyle(marker);
-    button.className = `map-marker marker-${markerClass}`;
+    const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
+    const typeClass = String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
+    const resolvedStyle = resolveMarkerStyle(marker);
+    // Team-/Gruppenmarker erhalten hier direkt beim Rendern einen eindeutigen Stil.
+    // So hängt die Darstellung nicht allein von optionalen CSS-Regeln ab.
+    const style = marker.marker_type === 'group'
+      ? { ...resolvedStyle, color: '#E53935', border_color: '#8B0000', size: 18, icon: '', opacity: 1, render_mode: 'point' }
+      : resolvedStyle;
+    button.className = `map-marker marker-${markerClass}${typeClass ? ` marker-${typeClass}` : ''}`;
+    if (marker.marker_type === 'group') {
+      button.classList.add('marker-team-group');
+      button.style.zIndex = '12';
+    }
     applyMarkerStyle(button, style);
-    if (marker.marker_type === 'group') button.style.zIndex = '20';
     button.style.left = `${Math.max(0,Math.min(5000,x))/50}%`;
     button.style.top = `${Math.max(0,Math.min(5000,y))/50}%`;
     button.dataset.place = marker.name || 'Ort';
-    // marker_styles.icon enthält teils technische Schlüssel (z. B. 'group'),
-    // keine druckbaren Zeichen. Diese Schlüssel dürfen nicht als Text im Punkt
-    // landen, weil dadurch der Punkt optisch aufbläht. Nur echte Symbole rendern.
-    const rawIcon = String(style?.icon || '').trim();
-    const displayIcon = ({ group: '', city: '', village: '', location: '', character: '', event: '' })[rawIcon.toLowerCase()] ?? rawIcon;
-    button.innerHTML = `<span class="marker-dot" aria-hidden="true">${escapeHtml(displayIcon)}</span><span class="marker-label">${escapeHtml(marker.name || 'Ort')}</span>`;
+    button.innerHTML = `<span class="marker-dot" aria-hidden="true">${escapeHtml(style?.icon || '')}</span><span class="marker-label">${escapeHtml(marker.name || 'Ort')}</span>`;
     button.addEventListener('click', event => { event.stopPropagation(); openMapMarker(marker); });
     mapView.appendChild(button);
   });
 }
 
 async function loadMapFromSupabase() {
+  ensureLightingOverlay();
+  loadWorldClockConfig();
   setMapImage(VALDARA_MAP_PUBLIC_URL);
   if (!hasSupabaseConfig()) { setMapStatus('Welt aktiv · neue Masterkarte',true); return; }
   try {
@@ -268,7 +322,7 @@ async function loadMapFromSupabase() {
       const styles = await supabaseGet(`marker_styles?select=marker_type,display_name,render_mode,color,size,icon,opacity,border_color&is_active=eq.true&order=marker_type.asc`);
       markerStyles = Object.fromEntries(styles.map(style => [style.marker_type, style]));
     } catch (styleError) {
-      console.error('Marker-Styles konnten nicht geladen werden; marker-spezifische Fallbacks werden verwendet:', styleError);
+      console.warn('Marker-Styles nicht verfügbar – verwende Fallback-Darstellung:', styleError);
       markerStyles = {};
     }
 
