@@ -161,14 +161,8 @@ body[data-page="community"] main > .hero, body[data-page="community"] main > .in
 @media(max-width:760px){.episode-card .current-episode-preview{max-width:none;}.episode-card #currentEpisodeTitle{font-size:30px;}}
 
 
-/* Teammarker: bewusst deutlich sichtbar und unabhängig von allgemeinen Markerregeln */
-.map-marker.marker-group,
-.map-marker.marker-team-group {
-  width: 26px !important;
-  height: 26px !important;
-  z-index: 12 !important;
-}
-.map-marker.marker-group .marker-dot,
+/* Team marker: force visible red dot, independent of generic marker styles */
+.map-marker.marker-team-group { z-index: 20 !important; }
 .map-marker.marker-team-group .marker-dot {
   width: 18px !important;
   height: 18px !important;
@@ -179,7 +173,4 @@ body[data-page="community"] main > .hero, body[data-page="community"] main > .in
   box-shadow: 0 0 10px rgba(229,57,53,.95), 0 0 16px rgba(0,0,0,.95) !important;
   color: transparent !important;
 }
-.map-marker.marker-group .marker-label,
-.map-marker.marker-team-group .marker-label {
-  border-color: rgba(229,57,53,.8) !important;
-}
+.map-marker.marker-team-group .marker-label { border-color: #E53935 !important; }
