@@ -525,7 +525,7 @@ async function loadStoryYouTubeVideos() {
   try {
     if (!hasSupabaseConfig()) throw new Error('Supabase ist nicht konfiguriert.');
     // Select * vermeidet eine harte Bindung an einzelne Spaltennamen des vorhandenen Masters.
-    const rows = await supabaseGet('youtube_videos?select=*&limit=200');
+    const rows = await supabaseGet('valdara_story_videos?select=*&is_active=eq.true&order=published_at.desc&limit=200');
     const videos = (Array.isArray(rows) ? rows : []).filter(row => {
       const active = read(row, ['is_active','active','published','is_published']);
       const statusValue = read(row, ['status','visibility']).toLowerCase();
@@ -537,7 +537,7 @@ async function loadStoryYouTubeVideos() {
       return db - da;
     });
     if (!videos.length) {
-      status.textContent = 'Noch keine YouTube-Videos in der Tabelle „youtube_videos“ gefunden.';
+      status.textContent = 'Noch keine YouTube-Videos in der Tabelle „valdara_story_videos“ gefunden.';
       list.innerHTML = '<p class="story-videos-empty">Sobald die Videos in Supabase hinterlegt sind, erscheinen sie hier automatisch.</p>';
       if (currentTitle) currentTitle.textContent = 'Noch keine Folge hinterlegt';
       if (currentDescription) currentDescription.textContent = 'Die aktuelle Folge wird automatisch angezeigt, sobald ein veröffentlichtes Video in Supabase vorhanden ist.';
@@ -561,7 +561,7 @@ async function loadStoryYouTubeVideos() {
   } catch (error) {
     console.warn('YouTube-Folgen konnten nicht geladen werden:', error);
     status.textContent = 'Die YouTube-Folgen konnten nicht aus Supabase geladen werden.';
-    list.innerHTML = `<p class="story-videos-empty">Bitte prüft, ob die Tabelle „youtube_videos“ öffentlich lesbar ist und die Videos dort eingetragen sind. <a href="${channelUrl}" target="_blank" rel="noopener noreferrer">Zum YouTube-Kanal →</a></p>`;
+    list.innerHTML = `<p class="story-videos-empty">Bitte prüft, ob die Tabelle „valdara_story_videos“ öffentlich lesbar ist und die Videos dort eingetragen sind. <a href="${channelUrl}" target="_blank" rel="noopener noreferrer">Zum YouTube-Kanal →</a></p>`;
   }
 }
 loadStoryYouTubeVideos();
