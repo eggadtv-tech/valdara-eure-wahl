@@ -238,7 +238,12 @@ function renderMapMarkers(markers) {
     button.type = 'button';
     const markerClass = String(marker.marker_type || 'location').replace(/[^a-z0-9_-]/gi,'');
     const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
-    const typeClass = String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
+    // Ein expliziter marker_type wie 'group' darf keine zusätzliche Klasse
+    // aus dem verknüpften location_type (z. B. 'city') bekommen. Sonst greifen
+    // die alten Hauptstadt-/Stadt-CSS-Regeln zusätzlich auf den Gruppenmarker.
+    const typeClass = marker.marker_type && marker.marker_type !== 'custom'
+      ? ''
+      : String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
     const style = resolveMarkerStyle(marker);
     button.className = `map-marker marker-${markerClass}${typeClass ? ` marker-${typeClass}` : ''}`;
     applyMarkerStyle(button, style);
