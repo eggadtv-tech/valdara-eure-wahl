@@ -37,3 +37,10 @@ Korrektur v25.3.1 (2026-10-09): Die Zoomansicht skaliert die bestehende Kartenin
 - Der Zoom verschiebt und skaliert ausschließlich die bestehende `#mapView`-Instanz (Kartenbild plus Orts-/Wettermarker).
 - Der rechte Beschreibungsbereich bzw. sonstige Seiteninhalte werden nicht in den Zoomcontainer verschoben.
 - Keine neue Karte, kein Bild-Reload, keine SQL-Änderungen und keine Neuberechnung von Orten oder Wetter.
+
+
+## v26.6 – KI-Assistent (12.10.2026)
+- Neue Seite `ki-assistent.html` mit dem bestehenden Cloudflare-Worker als eingebettetem Chat.
+- KI-Assistent ist über die Hauptnavigation und die Footer-Navigation erreichbar.
+- Die Chat-Oberfläche bleibt serverseitig beim Worker; keine Supabase-Schlüssel werden in die neue Seite eingebaut.
+- Bestehende Seiten, Karte, Wetter, Abstimmungen und Datenbanklogik wurden nicht absichtlich verändert.

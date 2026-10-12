@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07101d">
+<meta name="description" content="Fragt den Valdara KI-Assistenten nach der Welt, ihren Reichen und Völkern.">
+<title>KI-Assistent – VALDARA · Eure Wahl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.assistant-main{min-height:calc(100vh - 260px);padding:130px 24px 80px;max-width:1120px;margin:0 auto}
+.assistant-heading{text-align:center;max-width:760px;margin:0 auto 30px}
+.assistant-heading h1{font:600 clamp(34px,5vw,54px)/1.12 Cinzel,serif;margin:12px 0 16px}
+.assistant-heading p{color:var(--muted);margin:0 auto;max-width:650px}
+.assistant-frame-shell{padding:10px;border:1px solid rgba(215,173,88,.28);background:linear-gradient(145deg,rgba(17,29,46,.86),rgba(4,10,18,.96));box-shadow:0 20px 80px rgba(0,0,0,.35)}
+.assistant-frame{display:block;width:100%;height:760px;border:0;border-radius:2px;background:#07101d}
+.assistant-note{text-align:center;color:#7f8b9b;font-size:11px;margin:18px auto 0;max-width:700px}
+.assistant-note a{color:var(--gold2);text-decoration:underline;text-underline-offset:3px}
+@media(max-width:760px){.assistant-main{padding:100px 12px 48px}.assistant-frame-shell{padding:4px}.assistant-frame{height:72vh;min-height:600px}.assistant-heading{padding:0 10px}}
+</style>
+</head>
+<body data-page="assistent">
+<div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+<header class="site-header">
+  <a class="brand" href="index.html" aria-label="Valdara Startseite"><img src="assets/valdara-logo.jpg" alt="Valdara Logo"><span>VALDARA<small>EURE WAHL</small></span></a>
+  <nav class="main-nav" id="mainNav" aria-label="Hauptnavigation">
+    <a data-page="start" href="index.html">Startseite</a><a data-page="welt" href="welt.html">Welt</a><a data-page="voelker" href="voelker.html">Völker</a><a data-page="geschichten" href="geschichten.html">Geschichten</a><a data-page="entscheidungen" href="abstimmungen.html">Abstimmungen</a><a data-page="community" href="community.html">Community</a><a data-page="assistent" href="ki-assistent.html" class="active" aria-current="page">KI-Assistent</a>
+  </nav>
+  <div class="header-actions"><a class="login-btn" href="index.html">Zur Startseite</a><button class="menu-btn" id="menuBtn" type="button" aria-label="Menü öffnen" aria-expanded="false">☰</button></div>
+</header>
+<main class="assistant-main">
+  <div class="assistant-heading"><span class="eyebrow">FRAGT DIE WELT</span><h1>Valdaras KI-Assistent</h1><p>Stellt Fragen zu Valdara, den sechs Völkern, den Reichen und bekannten Orten. Der Assistent nutzt die angebundene Wissensbasis, soweit Daten verfügbar sind.</p></div>
+  <section class="assistant-frame-shell" aria-label="Valdara Chat-Assistent">
+    <iframe class="assistant-frame" src="https://valdara-ki-assistent.eggad-tv.workers.dev/" title="Valdara KI-Assistent" loading="eager" referrerpolicy="strict-origin-when-cross-origin" allow="clipboard-write"></iframe>
+  </section>
+  <p class="assistant-note">Der Chat wird vom Valdara-KI-Worker bereitgestellt. <a href="https://valdara-ki-assistent.eggad-tv.workers.dev/" target="_blank" rel="noopener noreferrer">Chat separat öffnen</a>.</p>
+</main>
+<footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="abstimmungen.html">Abstimmungen</a><a href="community.html">Community</a><a href="ki-assistent.html">KI-Assistent</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p><div class="footer-bottom"><span>© 2026 VALDARA – EURE WAHL</span><span>Die Welt wächst mit euch.</span></div></footer>
+<script>
+const menuButton=document.querySelector('#menuBtn');
+const navigation=document.querySelector('#mainNav');
+menuButton?.addEventListener('click',()=>{const open=navigation?.classList.toggle('open')||false;menuButton.setAttribute('aria-expanded',String(open));});
+navigation?.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{navigation.classList.remove('open');menuButton?.setAttribute('aria-expanded','false');}));
+</script>
+</body>
+</html>
