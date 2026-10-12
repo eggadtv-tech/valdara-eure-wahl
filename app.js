@@ -489,6 +489,9 @@ async function loadStoryYouTubeVideos() {
   const currentTitle = document.querySelector('#currentEpisodeTitle');
   const currentDescription = document.querySelector('#currentEpisodeDescription');
   const currentLink = document.querySelector('#currentEpisodeLink');
+  const currentPreviewLink = document.querySelector('#currentEpisodePreviewLink');
+  const currentThumbnail = document.querySelector('#currentEpisodeThumbnail');
+  const currentPreviewFallback = document.querySelector('#currentEpisodePreviewFallback');
   if (!list || !status) return;
 
   const channelUrl = 'https://www.youtube.com/@ValdaraEureWahl';
@@ -542,12 +545,28 @@ async function loadStoryYouTubeVideos() {
       if (currentTitle) currentTitle.textContent = 'Noch keine Folge hinterlegt';
       if (currentDescription) currentDescription.textContent = 'Die aktuelle Folge wird automatisch angezeigt, sobald ein veröffentlichtes Video in Supabase vorhanden ist.';
       if (currentLink) currentLink.href = channelUrl;
+      if (currentPreviewLink) currentPreviewLink.href = channelUrl;
+      if (currentThumbnail) { currentThumbnail.hidden = true; currentThumbnail.removeAttribute('src'); }
+      if (currentPreviewFallback) currentPreviewFallback.hidden = false;
       return;
     }
     const newest = videos[0];
     if (currentTitle) currentTitle.textContent = getTitle(newest);
     if (currentDescription) currentDescription.textContent = getDescription(newest) || (formatDate(getDate(newest)) ? `Veröffentlicht am ${formatDate(getDate(newest))}.` : 'Die neueste veröffentlichte Folge auf YouTube.');
     if (currentLink) currentLink.href = getUrl(newest);
+    if (currentPreviewLink) currentPreviewLink.href = getUrl(newest);
+    if (currentThumbnail) {
+      const preview = getThumbnail(newest);
+      currentThumbnail.hidden = !preview;
+      if (preview) {
+        currentThumbnail.onerror = () => { currentThumbnail.hidden = true; if (currentPreviewFallback) currentPreviewFallback.hidden = false; };
+        currentThumbnail.onload = () => { currentThumbnail.hidden = false; if (currentPreviewFallback) currentPreviewFallback.hidden = true; };
+        currentThumbnail.src = preview;
+      } else {
+        currentThumbnail.removeAttribute('src');
+      }
+    }
+    if (currentPreviewFallback) currentPreviewFallback.hidden = Boolean(getThumbnail(newest));
     // Archiv in chronologischer Reihenfolge: Folge 1 bis zur neuesten Folge.
     const archive = [...videos].reverse();
     list.innerHTML = archive.map((video, index) => {
