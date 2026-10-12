@@ -172,3 +172,15 @@ body[data-page="community"] main > .hero, body[data-page="community"] main > .in
   border-color: var(--marker-border, #222) !important;
   opacity: var(--marker-opacity, 1) !important;
 }
+
+
+/* Gruppenmarker: Punktgroesse kommt ausschliesslich aus marker_styles.size. */
+.map-marker.marker-group { z-index: 20; }
+.map-marker.marker-group .marker-dot {
+  width: var(--marker-size, 8px) !important;
+  height: var(--marker-size, 8px) !important;
+  min-width: var(--marker-size, 8px) !important;
+  min-height: var(--marker-size, 8px) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}

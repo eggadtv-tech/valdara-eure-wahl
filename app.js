@@ -242,10 +242,16 @@ function renderMapMarkers(markers) {
     const style = resolveMarkerStyle(marker);
     button.className = `map-marker marker-${markerClass}${typeClass ? ` marker-${typeClass}` : ''}`;
     applyMarkerStyle(button, style);
+    if (marker.marker_type === 'group') button.style.zIndex = '20';
     button.style.left = `${Math.max(0,Math.min(5000,x))/50}%`;
     button.style.top = `${Math.max(0,Math.min(5000,y))/50}%`;
     button.dataset.place = marker.name || 'Ort';
-    button.innerHTML = `<span class="marker-dot" aria-hidden="true">${escapeHtml(style?.icon || '')}</span><span class="marker-label">${escapeHtml(marker.name || 'Ort')}</span>`;
+    // marker_styles.icon enthält teils technische Schlüssel (z. B. 'group'),
+    // keine druckbaren Zeichen. Diese Schlüssel dürfen nicht als Text im Punkt
+    // landen, weil dadurch der Punkt optisch aufbläht. Nur echte Symbole rendern.
+    const rawIcon = String(style?.icon || '').trim();
+    const displayIcon = ({ group: '', city: '', village: '', location: '', character: '', event: '' })[rawIcon.toLowerCase()] ?? rawIcon;
+    button.innerHTML = `<span class="marker-dot" aria-hidden="true">${escapeHtml(displayIcon)}</span><span class="marker-label">${escapeHtml(marker.name || 'Ort')}</span>`;
     button.addEventListener('click', event => { event.stopPropagation(); openMapMarker(marker); });
     mapView.appendChild(button);
   });
