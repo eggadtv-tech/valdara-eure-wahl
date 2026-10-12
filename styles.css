@@ -115,3 +115,11 @@
 .poll-dice-details summary{cursor:pointer;color:#e5d6ff;font-weight:700}
 .poll-overview-empty{padding:24px;border:1px dashed rgba(215,173,88,.25);border-radius:14px;color:var(--muted);text-align:center}
 @media(max-width:600px){.poll-overview-toolbar{align-items:flex-start}.poll-overview-head{flex-direction:column}.poll-status{align-self:flex-start}.poll-overview-total{flex-direction:column;gap:5px}}
+
+
+/* Mehrseitige Navigation: Die Startseite bleibt mit Karte und Völkerübersicht vollständig erhalten. */
+.main-nav a.active{color:var(--gold,#e8c77a);}
+.page-intro{display:block!important;padding-top:54px;padding-bottom:18px;}
+.page-intro .section-heading{max-width:900px;margin:0 auto;}
+.footer-links{flex-wrap:wrap;gap:16px;}
+@media(max-width:760px){.page-intro{padding-top:34px;padding-bottom:10px;}}
