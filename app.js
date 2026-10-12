@@ -126,6 +126,8 @@ function resolveMarkerStyle(marker) {
   const fallback = {
     city: {color:'#F2C94C', border_color:'#6f5310', size:10, icon:'', render_mode:'point', opacity:1},
     village: {color:'#8B5A2B', border_color:'#5C3718', size:5, icon:'', render_mode:'point', opacity:1},
+    group: {color:'#E53935', border_color:'#8B0000', size:8, icon:'', render_mode:'point', opacity:1},
+    location: {color:'#D7AD58', border_color:'#222', size:8, icon:'', render_mode:'point', opacity:1},
     custom: {color:'#D7AD58', border_color:'#222', size:11, icon:'', render_mode:'point', opacity:1},
     realm: {color:'#D7AD58', border_color:'#222', size:12, icon:'', render_mode:'point', opacity:1}
   };
@@ -238,12 +240,7 @@ function renderMapMarkers(markers) {
     button.type = 'button';
     const markerClass = String(marker.marker_type || 'location').replace(/[^a-z0-9_-]/gi,'');
     const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
-    // Ein expliziter marker_type wie 'group' darf keine zusätzliche Klasse
-    // aus dem verknüpften location_type (z. B. 'city') bekommen. Sonst greifen
-    // die alten Hauptstadt-/Stadt-CSS-Regeln zusätzlich auf den Gruppenmarker.
-    const typeClass = marker.marker_type && marker.marker_type !== 'custom'
-      ? ''
-      : String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
+    const typeClass = String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
     const style = resolveMarkerStyle(marker);
     button.className = `map-marker marker-${markerClass}${typeClass ? ` marker-${typeClass}` : ''}`;
     applyMarkerStyle(button, style);
@@ -277,7 +274,7 @@ async function loadMapFromSupabase() {
       const styles = await supabaseGet(`marker_styles?select=marker_type,display_name,render_mode,color,size,icon,opacity,border_color&is_active=eq.true&order=marker_type.asc`);
       markerStyles = Object.fromEntries(styles.map(style => [style.marker_type, style]));
     } catch (styleError) {
-      console.warn('Marker-Styles nicht verfügbar – verwende Fallback-Darstellung:', styleError);
+      console.error('Marker-Styles konnten nicht geladen werden; marker-spezifische Fallbacks werden verwendet:', styleError);
       markerStyles = {};
     }
 
