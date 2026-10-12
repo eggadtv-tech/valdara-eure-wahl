@@ -110,19 +110,15 @@ async function openMapMarker(marker) {
 let markerStyles = {};
 
 function resolveMarkerStyle(marker) {
-  const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
-  // Der explizite marker_type ist die primäre Styling-Quelle aus SQL.
-  // location_type darf nur als Fallback dienen, wenn marker_type fehlt/benutzerdefiniert ist.
-  let code = marker.marker_type || locationType || 'custom';
-
-  // Realm-Marker bleiben custom + realm_id.
-  if (marker.realm_id && !marker.location_id) code = 'realm';
-  else if ((!marker.marker_type || marker.marker_type === 'custom') && locationType) code = locationType;
+  // Der explizite Marker-Typ aus map_markers ist maßgeblich.
+  // location_type darf z. B. "group" nicht in "city" umklassifizieren.
+  const code = (marker.realm_id && !marker.location_id)
+    ? 'realm'
+    : (marker.marker_type || 'custom');
 
   if (markerStyles[code]) return markerStyles[code];
-  if (markerStyles[marker.marker_type]) return markerStyles[marker.marker_type];
 
-  // Robuste Fallbacks: bestehende Marker funktionieren auch ohne marker_styles.
+  // Fallbacks nur dann nutzen, wenn kein aktiver SQL-Stil für diesen Typ geladen wurde.
   const fallback = {
     city: {color:'#F2C94C', border_color:'#6f5310', size:10, icon:'', render_mode:'point', opacity:1},
     village: {color:'#8B5A2B', border_color:'#5C3718', size:5, icon:'', render_mode:'point', opacity:1},
@@ -131,7 +127,7 @@ function resolveMarkerStyle(marker) {
     custom: {color:'#D7AD58', border_color:'#222', size:11, icon:'', render_mode:'point', opacity:1},
     realm: {color:'#D7AD58', border_color:'#222', size:12, icon:'', render_mode:'point', opacity:1}
   };
-  return fallback[code] || fallback[marker.marker_type] || fallback.custom;
+  return fallback[code] || fallback.custom;
 }
 
 function applyMarkerStyle(button, style) {
@@ -239,10 +235,8 @@ function renderMapMarkers(markers) {
     const button = document.createElement('button');
     button.type = 'button';
     const markerClass = String(marker.marker_type || 'location').replace(/[^a-z0-9_-]/gi,'');
-    const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
-    const typeClass = String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
     const style = resolveMarkerStyle(marker);
-    button.className = `map-marker marker-${markerClass}${typeClass ? ` marker-${typeClass}` : ''}`;
+    button.className = `map-marker marker-${markerClass}`;
     applyMarkerStyle(button, style);
     if (marker.marker_type === 'group') button.style.zIndex = '20';
     button.style.left = `${Math.max(0,Math.min(5000,x))/50}%`;
