@@ -237,8 +237,17 @@ function renderMapMarkers(markers) {
     const markerClass = String(marker.marker_type || 'location').replace(/[^a-z0-9_-]/gi,'');
     const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
     const typeClass = String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
-    const style = resolveMarkerStyle(marker);
+    const resolvedStyle = resolveMarkerStyle(marker);
+    // Team-/Gruppenmarker erhalten hier direkt beim Rendern einen eindeutigen Stil.
+    // So hängt die Darstellung nicht allein von optionalen CSS-Regeln ab.
+    const style = marker.marker_type === 'group'
+      ? { ...resolvedStyle, color: '#E53935', border_color: '#8B0000', size: 18, icon: '', opacity: 1, render_mode: 'point' }
+      : resolvedStyle;
     button.className = `map-marker marker-${markerClass}${typeClass ? ` marker-${typeClass}` : ''}`;
+    if (marker.marker_type === 'group') {
+      button.classList.add('marker-team-group');
+      button.style.zIndex = '12';
+    }
     applyMarkerStyle(button, style);
     button.style.left = `${Math.max(0,Math.min(5000,x))/50}%`;
     button.style.top = `${Math.max(0,Math.min(5000,y))/50}%`;

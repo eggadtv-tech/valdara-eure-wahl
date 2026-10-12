@@ -159,3 +159,27 @@ body[data-page="community"] main > .hero, body[data-page="community"] main > .in
 .episode-card .current-episode-preview span{position:absolute;inset:0;display:grid;place-items:center;color:#f2d18c;font-size:42px;background:radial-gradient(circle,rgba(215,173,88,.12),transparent 58%);}
 .episode-card #currentEpisodeTitle{font-size:clamp(28px,3vw,42px);line-height:1.12;overflow-wrap:anywhere;}
 @media(max-width:760px){.episode-card .current-episode-preview{max-width:none;}.episode-card #currentEpisodeTitle{font-size:30px;}}
+
+
+/* Teammarker: bewusst deutlich sichtbar und unabhängig von allgemeinen Markerregeln */
+.map-marker.marker-group,
+.map-marker.marker-team-group {
+  width: 26px !important;
+  height: 26px !important;
+  z-index: 12 !important;
+}
+.map-marker.marker-group .marker-dot,
+.map-marker.marker-team-group .marker-dot {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  background: #E53935 !important;
+  border: 2px solid #8B0000 !important;
+  box-shadow: 0 0 10px rgba(229,57,53,.95), 0 0 16px rgba(0,0,0,.95) !important;
+  color: transparent !important;
+}
+.map-marker.marker-group .marker-label,
+.map-marker.marker-team-group .marker-label {
+  border-color: rgba(229,57,53,.8) !important;
+}
