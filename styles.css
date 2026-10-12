@@ -70,7 +70,7 @@
 /* Valdara v25.3: 5x5-Lupe auf derselben Karteninstanz; nur #mapView wird vergrößert */
 .map-view{isolation:isolate}
 .map-sector-grid{position:absolute;inset:0;z-index:20;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));opacity:0;transition:opacity .2s;pointer-events:none}
-.map-view:hover .map-sector-grid,.map-sector-grid:focus-within{opacity:1;pointer-events:auto}
+.map-view.grid-enabled .map-sector-grid,.map-view.grid-enabled .map-sector-grid:focus-within{opacity:1;pointer-events:auto}
 .map-sector-grid button{display:flex;align-items:center;justify-content:center;border:1px solid rgba(242,209,138,.0);background:rgba(3,9,17,0);cursor:zoom-in;transition:background .18s,border-color .18s;min-width:0;min-height:0}
 .map-sector-grid button:hover,.map-sector-grid button:focus-visible{background:rgba(3,9,17,.16);border-color:rgba(242,209,138,.75);outline:none}
 .map-sector-grid button span{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid rgba(242,209,138,.8);border-radius:50%;background:rgba(3,9,17,.82);color:var(--gold2);font-size:25px;line-height:1;opacity:0;transform:scale(.8);transition:.18s}
@@ -88,4 +88,30 @@
 .map-zoom-footer{border-top:1px solid rgba(215,173,88,.18);letter-spacing:.03em;color:var(--muted)}
 .map-zoom-footer button{border:1px solid rgba(215,173,88,.5);background:rgba(215,173,88,.08);padding:8px 12px;color:var(--gold2);cursor:pointer;white-space:nowrap}
 .map-zoom-footer button:hover{background:rgba(215,173,88,.16)}
-@media(max-width:700px){.map-sector-grid{opacity:.65;pointer-events:auto}.map-sector-grid button span{opacity:.85;width:28px;height:28px;font-size:21px}.map-zoom-modal{padding:6px}.map-zoom-dialog{width:100%;}.map-zoom-toolbar,.map-zoom-footer{padding:8px;font-size:9px}.map-zoom-canvas{aspect-ratio:3/2}.map-zoom-canvas .map-view{width:500%;height:500%;aspect-ratio:auto}.map-zoom-footer{align-items:flex-start;flex-direction:column}.map-zoom-footer button{width:100%}}
+@media(max-width:700px){.map-view.grid-enabled .map-sector-grid{opacity:.65;pointer-events:auto}.map-sector-grid button span{opacity:.85;width:28px;height:28px;font-size:21px}.map-zoom-modal{padding:6px}.map-zoom-dialog{width:100%;}.map-zoom-toolbar,.map-zoom-footer{padding:8px;font-size:9px}.map-zoom-canvas{aspect-ratio:3/2}.map-zoom-canvas .map-view{width:500%;height:500%;aspect-ratio:auto}.map-zoom-footer{align-items:flex-start;flex-direction:column}.map-zoom-footer button{width:100%}}
+
+/* Abstimmungsübersicht – Valdara Frontend v25.4 */
+.poll-overview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 auto 18px;max-width:1050px;color:var(--muted);font-size:12px}
+.poll-overview-toolbar button{border:1px solid rgba(215,173,88,.42);border-radius:999px;background:rgba(215,173,88,.08);color:var(--gold2);padding:9px 14px;cursor:pointer}
+.poll-overview-toolbar button:hover{background:rgba(215,173,88,.16)}
+.poll-overview-list{display:grid;gap:18px;max-width:1050px;margin:0 auto}
+.poll-overview-card{position:relative;padding:clamp(18px,3vw,28px);border:1px solid rgba(215,173,88,.22);border-radius:18px;background:linear-gradient(145deg,rgba(15,29,47,.92),rgba(6,14,25,.96));box-shadow:0 14px 42px rgba(0,0,0,.2);overflow:hidden}
+.poll-overview-card:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(180deg,var(--gold2),rgba(151,112,190,.5))}
+.poll-overview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}
+.poll-overview-card h3{margin:6px 0 0;color:#f5f1e8;font-family:Cinzel,serif;font-size:clamp(18px,2.5vw,25px);line-height:1.35}
+.poll-overview-meta{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.poll-status{flex:0 0 auto;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:6px 10px;font-size:10px;letter-spacing:.06em;color:#d8dee7;white-space:nowrap}
+.poll-status.active{border-color:rgba(93,190,145,.45);color:#9de0bb;background:rgba(56,150,105,.1)}
+.poll-status.resolved{border-color:rgba(215,173,88,.45);color:var(--gold2)}
+.poll-options{display:grid;gap:13px}
+.poll-option{display:grid;gap:7px}
+.poll-option-line{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#e6e9ef;font-size:14px}
+.poll-option-line strong{font-variant-numeric:tabular-nums;color:var(--gold2);white-space:nowrap}
+.poll-progress{height:7px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.poll-progress span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#8e6fbd,var(--gold2));transition:width .3s ease}
+.poll-overview-total{display:flex;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.09);color:var(--muted);font-size:12px}
+.poll-winner{margin-top:14px;padding:12px 14px;border:1px solid rgba(215,173,88,.32);border-radius:10px;background:rgba(215,173,88,.07);color:#f0d9a3;font-size:13px}
+.poll-dice-details{margin-top:12px;padding:12px 14px;border-radius:10px;background:rgba(126,102,164,.1);border:1px solid rgba(155,128,198,.25);color:#ded2f2;font-size:12px;line-height:1.7}
+.poll-dice-details summary{cursor:pointer;color:#e5d6ff;font-weight:700}
+.poll-overview-empty{padding:24px;border:1px dashed rgba(215,173,88,.25);border-radius:14px;color:var(--muted);text-align:center}
+@media(max-width:600px){.poll-overview-toolbar{align-items:flex-start}.poll-overview-head{flex-direction:column}.poll-status{align-self:flex-start}.poll-overview-total{flex-direction:column;gap:5px}}

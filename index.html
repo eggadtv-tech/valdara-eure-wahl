@@ -38,7 +38,7 @@
 <section class="map-section section" id="welt">
   <div class="section-heading"><span class="eyebrow">DIE WELT</span><h2>Valdara entdecken</h2><p>Die bekannte Welt von Valdara – mit Reichen, Städten und Orten, die im Verlauf der Geschichte sichtbar werden.</p></div>
   <div class="map-shell">
-    <div class="map-top"><span>VALDARA · ÜBERSICHT</span><div class="map-top-actions"><button id="weatherToggle" class="map-weather-toggle active" type="button">☁ Wetter</button><span class="map-status" id="mapStatus"><i></i> Karte wird geladen …</span></div></div>
+    <div class="map-top"><span>VALDARA · ÜBERSICHT</span><div class="map-top-actions"><button id="weatherToggle" class="map-weather-toggle active" type="button">☁ Wetter</button><button id="mapGridToggle" class="map-weather-toggle" type="button" aria-pressed="false">⌕ Lupe aktivieren</button><span class="map-status" id="mapStatus"><i></i> Karte wird geladen …</span></div></div>
     <div class="map-view" id="mapView">
       <img id="valdaraMap" src="https://vunvrgopzcbbxcxyjnxp.supabase.co/storage/v1/object/public/valdara-media/maps/continents/Valdara_Master_Map_Wegenetz_v4_Siedlungsnetz.png?v=20261008-5000" alt="Karte von Valdara">
       <div class="map-sector-grid" id="mapSectorGrid" aria-label="Kartenausschnitt auswählen">
@@ -95,13 +95,17 @@
 </section>
 
 <section class="decision section" id="entscheidungen">
-  <div class="section-heading centered"><span class="eyebrow">AKTUELLE ENTSCHEIDUNG</span><h2>Ihr entscheidet.</h2><p>Die nächste Entscheidung bestimmt, welches Volk unsere Geschichte erzählen wird.</p></div>
-  <div class="decision-card">
-    <div class="decision-question"><span class="decision-number">01</span><div><span class="eyebrow">FOLGE 2</span><h3>Welches Volk soll unser Charakter sein?</h3></div></div>
-    <div class="choice-grid">
-      <button>Meren <span>→</span></button><button>Elarin <span>→</span></button><button>Durn <span>→</span></button><button>Urakai <span>→</span></button><button>Dravari <span>→</span></button><button>Kharai <span>→</span></button>
-    </div>
-    <div class="decision-footer"><span>Eine Stimme pro Account</span><span>Die Entscheidung bleibt bis zum Ende offen.</span></div>
+  <div class="section-heading centered">
+    <span class="eyebrow">VALDARA · EURE WAHL</span>
+    <h2>Alle Abstimmungen</h2>
+    <p>Verfolgt die Entscheidungen der Gemeinschaft und seht das zusammengeführte Gesamtergebnis.</p>
+  </div>
+  <div class="poll-overview-toolbar">
+    <span id="pollOverviewStatus" role="status">Abstimmungen werden geladen …</span>
+    <button type="button" id="pollOverviewRefresh">Aktualisieren ↻</button>
+  </div>
+  <div class="poll-overview-list" id="pollOverviewList">
+    <div class="poll-overview-empty">Die Abstimmungen werden geladen …</div>
   </div>
 </section>
 
@@ -110,7 +114,7 @@
   <div class="social-grid"><a class="social-card youtube" href="https://www.youtube.com/@ValdaraEureWahl" target="_blank" rel="noopener noreferrer"><span class="social-symbol">▶</span><div><strong>YouTube</strong><p>Folgen ansehen &amp; Geschichte verfolgen</p></div><span>→</span></a><a class="social-card instagram" href="https://www.instagram.com/valdara_eure_wahl/" target="_blank" rel="noopener noreferrer"><span class="social-symbol">◎</span><div><strong>Instagram</strong><p>Entscheidungen, Bilder &amp; Neuigkeiten</p></div><span>→</span></a><a class="social-card discord" href="#"><span class="social-symbol">◌</span><div><strong>Discord</strong><p>Mit der Community diskutieren</p></div><span>→</span></a></div>
 </section>
 </main>
-<footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="#welt">Welt</a><a href="#voelker">Völker</a><a href="#geschichten">Geschichten</a><a href="#community">Community</a><a href="datenschutz.html">Datenschutz</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p><div class="footer-bottom"><span>© 2026 VALDARA – EURE WAHL</span><span>Die Welt wächst mit euch.</span></div></footer>
+<footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="#welt">Welt</a><a href="#voelker">Völker</a><a href="#geschichten">Geschichten</a><a href="#community">Community</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p><div class="footer-bottom"><span>© 2026 VALDARA – EURE WAHL</span><span>Die Welt wächst mit euch.</span></div></footer>
 
 <div class="people-modal" id="peopleModal" aria-hidden="true">
   <div class="people-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="peopleModalTitle">

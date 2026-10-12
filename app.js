@@ -346,6 +346,17 @@ weatherToggle?.addEventListener('click', (event) => {
   applyWeatherVisibility();
 });
 
+const mapGridToggle = document.querySelector('#mapGridToggle');
+mapGridToggle?.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  const enabled = !mapView?.classList.contains('grid-enabled');
+  mapView?.classList.toggle('grid-enabled', enabled);
+  mapGridToggle.classList.toggle('active', enabled);
+  mapGridToggle.setAttribute('aria-pressed', String(enabled));
+  mapGridToggle.textContent = enabled ? '⌕ Lupe deaktivieren' : '⌕ Lupe aktivieren';
+});
+
 const menu=document.querySelector('#menuBtn'); const nav=document.querySelector('#mainNav');
 menu?.addEventListener('click',()=>nav?.classList.toggle('open'));
 nav?.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('open')));
@@ -359,3 +370,113 @@ mapZoomModal?.addEventListener('click', event => { if (event.target === mapZoomM
 peopleModal?.addEventListener('click',e=>{if(e.target===peopleModal)closePeople();});
 mapDetailModal?.addEventListener('click',e=>{if(e.target===mapDetailModal)closeMapDetail();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();closeMapDetail();closeMapZoom();}});
+
+
+/* Dynamische Gesamtübersicht der Valdara-Abstimmungen */
+(() => {
+  const list = document.querySelector('#pollOverviewList');
+  const statusNode = document.querySelector('#pollOverviewStatus');
+  const refreshButton = document.querySelector('#pollOverviewRefresh');
+  if (!list || !statusNode || !window.VALDARA_SUPABASE_URL || !window.VALDARA_SUPABASE_ANON_KEY) return;
+
+  const api = `${window.VALDARA_SUPABASE_URL}/rest/v1`;
+  const headers = {
+    apikey: window.VALDARA_SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${window.VALDARA_SUPABASE_ANON_KEY}`
+  };
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+  const dateValue = value => value ? new Date(value).getTime() : 0;
+  const fmtDate = value => value ? new Intl.DateTimeFormat('de-DE', {
+    dateStyle:'medium', timeStyle:'short'
+  }).format(new Date(value)) : '';
+  async function get(path) {
+    const response = await fetch(`${api}/${path}`, {headers});
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`${response.status}: ${body}`);
+    }
+    return response.json();
+  }
+  function statusLabel(status) {
+    return ({active:'Aktiv', closed:'Abgeschlossen', resolved:'Entschieden', cancelled:'Abgebrochen', draft:'Vorbereitung'})[status] || status || 'Unbekannt';
+  }
+  function renderCard(decision, options, totals, result, rolls) {
+    const rows = options.map(option => {
+      const votes = Number((totals.find(t => t.option_id === option.id) || {}).total_votes || 0);
+      return {...option, votes};
+    });
+    const total = rows.reduce((sum, row) => sum + row.votes, 0);
+    const max = Math.max(0, ...rows.map(row => row.votes));
+    const winner = result?.winning_option_id
+      ? rows.find(row => row.id === result.winning_option_id)
+      : rows.find(row => row.id === decision.result_option_id);
+    const wasDice = result?.resolution_method === 'w20';
+    const sortedRolls = (rolls || []).slice().sort((a,b) =>
+      Number(a.attempt_number)-Number(b.attempt_number) ||
+      Number(a.round_number)-Number(b.round_number) ||
+      new Date(a.created_at)-new Date(b.created_at));
+    const optionName = id => rows.find(row => row.id === id)?.title || 'Unbekannte Option';
+    const optionsHtml = rows.map(row => `
+      <div class="poll-option">
+        <div class="poll-option-line"><span>${esc(row.title)}</span><strong>${row.votes} ${row.votes === 1 ? 'Stimme' : 'Stimmen'}</strong></div>
+        <div class="poll-progress" aria-label="${esc(row.title)}: ${row.votes} Stimmen von ${total}">
+          <span style="width:${total ? (row.votes/total*100) : 0}%"></span>
+        </div>
+      </div>`).join('');
+    let diceHtml = '';
+    if (wasDice) {
+      const attempts = [...new Set(sortedRolls.map(r => r.attempt_number))];
+      const detail = sortedRolls.length ? sortedRolls.map(r =>
+        `Versuch ${r.attempt_number}, Runde ${r.round_number}: ${esc(optionName(r.option_id))} würfelt ${r.roll_value}`
+      ).join('<br>') : 'Der W20-Entscheid wurde gespeichert. Einzelne Würfe sind hier nicht verfügbar.';
+      diceHtml = `<details class="poll-dice-details"><summary>⚄ Gleichstand – Entscheidung per W20</summary><p>Es wurde gewürfelt${attempts.length ? ` (Versuch ${attempts.join(', ')})` : ''}. Der höchste eindeutige Wurf entscheidet.</p><div>${detail}</div></details>`;
+    }
+    const dateText = decision.ends_at ? `Ende: ${fmtDate(decision.ends_at)}` : (decision.created_at ? `Erstellt: ${fmtDate(decision.created_at)}` : '');
+    return `<article class="poll-overview-card">
+      <div class="poll-overview-head">
+        <div><div class="poll-overview-meta">${esc(dateText)}</div><h3>${esc(decision.title)}</h3></div>
+        <span class="poll-status ${decision.status === 'active' ? 'active' : decision.status === 'resolved' ? 'resolved' : ''}">${esc(statusLabel(decision.status))}</span>
+      </div>
+      <div class="poll-options">${optionsHtml || '<p>Keine Antwortmöglichkeiten vorhanden.</p>'}</div>
+      <div class="poll-overview-total"><span>Gesamtstimmen: <strong>${total}</strong></span><span>${rows.length} Antwortmöglichkeiten</span></div>
+      ${winner && (decision.status === 'resolved' || result) ? `<div class="poll-winner">✦ Gewinner: <strong>${esc(winner.title)}</strong>${wasDice ? ' · durch W20 entschieden' : ' · nach Gesamtstimmen'}</div>` : ''}
+      ${diceHtml}
+    </article>`;
+  }
+
+  async function load() {
+    refreshButton.disabled = true;
+    statusNode.textContent = 'Abstimmungen werden aktualisiert …';
+    try {
+      const [decisions, options, totals] = await Promise.all([
+        get('decisions?select=id,title,status,starts_at,ends_at,created_at,result_option_id&status=not.eq.draft'),
+        get('decision_options?select=id,decision_id,title,description,sort_order,is_active&is_active=eq.true&order=sort_order.asc'),
+        get('valdara_unified_vote_totals?select=decision_id,option_id,answer,total_votes')
+      ]);
+      let results = [], rolls = [];
+      try { results = await get('decision_tiebreaker_results?select=decision_id,winning_option_id,vote_count,resolution_method,attempt_number,resolved_at'); } catch (_) {}
+      try { rolls = await get('decision_tiebreaker_rolls?select=decision_id,option_id,attempt_number,round_number,roll_value,created_at'); } catch (_) {}
+      const ordered = decisions.slice().sort((a,b) =>
+        dateValue(b.created_at || b.starts_at || b.ends_at) - dateValue(a.created_at || a.starts_at || a.ends_at));
+      const visible = ordered.filter(d => d.status !== 'draft' && d.status !== 'cancelled');
+      list.innerHTML = visible.length ? visible.map(d => renderCard(
+        d,
+        options.filter(o => o.decision_id === d.id).sort((a,b) => Number(a.sort_order||0)-Number(b.sort_order||0)),
+        totals.filter(t => t.decision_id === d.id),
+        results.find(r => r.decision_id === d.id),
+        rolls.filter(r => r.decision_id === d.id)
+      )).join('') : '<div class="poll-overview-empty">Aktuell gibt es keine öffentlichen Abstimmungen.</div>';
+      statusNode.textContent = `${visible.length} Abstimmung${visible.length === 1 ? '' : 'en'} geladen · neueste zuerst`;
+    } catch (error) {
+      console.error('Valdara-Abstimmungsübersicht:', error);
+      statusNode.textContent = 'Die Abstimmungen konnten nicht geladen werden.';
+      list.innerHTML = '<div class="poll-overview-empty">Die Ergebnisse sind momentan nicht verfügbar. Bitte später erneut versuchen.</div>';
+    } finally {
+      refreshButton.disabled = false;
+    }
+  }
+  refreshButton.addEventListener('click', load);
+  load();
+})();
