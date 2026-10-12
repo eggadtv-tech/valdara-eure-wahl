@@ -123,3 +123,12 @@
 .page-intro .section-heading{max-width:900px;margin:0 auto;}
 .footer-links{flex-wrap:wrap;gap:16px;}
 @media(max-width:760px){.page-intro{padding-top:34px;padding-bottom:10px;}}
+
+
+/* v26.1 – echte sichtbare Seitentrennung. Die vorhandenen Komponenten bleiben im DOM, damit die gemeinsame App-JS stabil bleibt. */
+body[data-page="start"] .page-intro, body[data-page="start"] .story-section, body[data-page="start"] .decision, body[data-page="start"] .social { display:none !important; }
+body[data-page="welt"] main > .hero, body[data-page="welt"] main > .intro, body[data-page="welt"] main > .peoples, body[data-page="welt"] main > .story-section, body[data-page="welt"] main > .decision, body[data-page="welt"] main > .social { display:none !important; }
+body[data-page="voelker"] main > .hero, body[data-page="voelker"] main > .intro, body[data-page="voelker"] main > .map-section, body[data-page="voelker"] main > .world-cards, body[data-page="voelker"] main > .story-section, body[data-page="voelker"] main > .decision, body[data-page="voelker"] main > .social { display:none !important; }
+body[data-page="geschichten"] main > .hero, body[data-page="geschichten"] main > .intro, body[data-page="geschichten"] main > .map-section, body[data-page="geschichten"] main > .world-cards, body[data-page="geschichten"] main > .peoples, body[data-page="geschichten"] main > .decision, body[data-page="geschichten"] main > .social { display:none !important; }
+body[data-page="entscheidungen"] main > .hero, body[data-page="entscheidungen"] main > .intro, body[data-page="entscheidungen"] main > .map-section, body[data-page="entscheidungen"] main > .world-cards, body[data-page="entscheidungen"] main > .peoples, body[data-page="entscheidungen"] main > .story-section, body[data-page="entscheidungen"] main > .social { display:none !important; }
+body[data-page="community"] main > .hero, body[data-page="community"] main > .intro, body[data-page="community"] main > .map-section, body[data-page="community"] main > .world-cards, body[data-page="community"] main > .peoples, body[data-page="community"] main > .story-section, body[data-page="community"] main > .decision { display:none !important; }
