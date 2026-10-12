@@ -111,11 +111,13 @@ let markerStyles = {};
 
 function resolveMarkerStyle(marker) {
   const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
-  let code = marker.marker_type || 'custom';
+  // Der explizite marker_type ist die primäre Styling-Quelle aus SQL.
+  // location_type darf nur als Fallback dienen, wenn marker_type fehlt/benutzerdefiniert ist.
+  let code = marker.marker_type || locationType || 'custom';
 
   // Realm-Marker bleiben custom + realm_id.
   if (marker.realm_id && !marker.location_id) code = 'realm';
-  else if (locationType) code = locationType;
+  else if ((!marker.marker_type || marker.marker_type === 'custom') && locationType) code = locationType;
 
   if (markerStyles[code]) return markerStyles[code];
   if (markerStyles[marker.marker_type]) return markerStyles[marker.marker_type];
@@ -237,13 +239,8 @@ function renderMapMarkers(markers) {
     const markerClass = String(marker.marker_type || 'location').replace(/[^a-z0-9_-]/gi,'');
     const locationType = Array.isArray(marker.locations) ? marker.locations[0]?.location_type : marker.locations?.location_type;
     const typeClass = String(locationType || '').replace(/[^a-z0-9_-]/gi,'');
-    const resolvedStyle = resolveMarkerStyle(marker);
-    // Force the group marker's appearance at the actual render point.
-    const style = marker.marker_type === 'group'
-      ? { ...resolvedStyle, color: '#E53935', border_color: '#8B0000', size: 18, icon: '', opacity: 1, render_mode: 'point' }
-      : resolvedStyle;
+    const style = resolveMarkerStyle(marker);
     button.className = `map-marker marker-${markerClass}${typeClass ? ` marker-${typeClass}` : ''}`;
-    if (marker.marker_type === 'group') button.classList.add('marker-team-group');
     applyMarkerStyle(button, style);
     button.style.left = `${Math.max(0,Math.min(5000,x))/50}%`;
     button.style.top = `${Math.max(0,Math.min(5000,y))/50}%`;
