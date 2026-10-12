@@ -187,3 +187,16 @@ body[data-page="community"] main > .hero, body[data-page="community"] main > .in
 .map-marker.marker-team-group .marker-label {
   border-color: rgba(229,57,53,.8) !important;
 }
+
+/* VALDARA – schwebender KI-Chat unten rechts */
+#valdara-chat-widget{position:fixed;right:24px;bottom:22px;z-index:9999;font-family:Manrope,Arial,sans-serif;color:#f4f0e8}
+#valdara-chat-widget [hidden]{display:none!important}
+.valdara-chat-launcher{display:flex;align-items:center;gap:10px;min-height:54px;padding:0 20px;border:1px solid rgba(230,194,119,.7);border-radius:999px;background:linear-gradient(135deg,#24354b,#0b1422 72%);color:#f8e5b5;box-shadow:0 10px 34px rgba(0,0,0,.45),inset 0 1px rgba(255,255,255,.08);font:700 14px Manrope,Arial,sans-serif;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
+.valdara-chat-launcher:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(0,0,0,.5),0 0 0 3px rgba(218,177,95,.12)}
+.valdara-chat-launcher-icon{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:rgba(221,180,94,.16);font-size:19px;color:#e8c579}
+.valdara-chat-panel{position:absolute;right:0;bottom:68px;width:min(390px,calc(100vw - 28px));height:min(590px,calc(100dvh - 112px));min-height:380px;overflow:hidden;border:1px solid rgba(220,180,99,.45);border-radius:16px;background:#07101d;box-shadow:0 20px 70px rgba(0,0,0,.62);transform-origin:bottom right;animation:valdara-chat-in .18s ease-out}
+.valdara-chat-header{height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:linear-gradient(110deg,#17283c,#091321);border-bottom:1px solid rgba(220,180,99,.25)}
+.valdara-chat-heading{display:flex;align-items:center;gap:10px}.valdara-chat-mark{display:grid;place-items:center;width:35px;height:35px;border:1px solid rgba(220,180,99,.4);border-radius:50%;color:#e8c579;font-size:20px}.valdara-chat-heading strong,.valdara-chat-heading small{display:block}.valdara-chat-heading strong{font-size:13px;letter-spacing:.2px}.valdara-chat-heading small{margin-top:3px;font-size:10px;color:#aab4c2;letter-spacing:1.2px;text-transform:uppercase}.valdara-chat-controls{display:flex;align-items:center;gap:7px}.valdara-chat-popout,.valdara-chat-close{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.04);color:#f3e7cc;text-decoration:none;font:22px Arial,sans-serif;cursor:pointer}.valdara-chat-popout{font-size:18px}.valdara-chat-popout:hover,.valdara-chat-close:hover{background:rgba(220,180,99,.15)}.valdara-chat-frame{display:block;width:100%;height:calc(100% - 62px);border:0;background:#07101d}
+@keyframes valdara-chat-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:600px){#valdara-chat-widget{right:12px;bottom:12px}.valdara-chat-launcher{min-height:50px;padding:0 16px}.valdara-chat-panel{position:fixed;right:8px;bottom:72px;width:calc(100vw - 16px);height:min(72dvh,650px);min-height:360px;border-radius:14px}.valdara-chat-launcher-label{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.valdara-chat-panel{animation:none}.valdara-chat-launcher{transition:none}}
