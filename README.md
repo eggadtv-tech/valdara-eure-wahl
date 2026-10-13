@@ -44,3 +44,10 @@ Korrektur v25.3.1 (2026-10-09): Die Zoomansicht skaliert die bestehende Kartenin
 - KI-Assistent ist über die Hauptnavigation und die Footer-Navigation erreichbar.
 - Die Chat-Oberfläche bleibt serverseitig beim Worker; keine Supabase-Schlüssel werden in die neue Seite eingebaut.
 - Bestehende Seiten, Karte, Wetter, Abstimmungen und Datenbanklogik wurden nicht absichtlich verändert.
+
+
+## v29 – Sichtbare Kern-Wetterreferenzpunkte (13.10.2026)
+- Die 18 Kern-Wetterreferenzpunkte werden aus `weather_reference_coordinates` geladen.
+- Ihre Markerpositionen verwenden `valdara_x` und `valdara_y` aus der View und damit die festgelegten Valdara-Zielkoordinaten.
+- Die sieben äußeren Wetteranker werden nicht als sichtbare Referenzmarker gerendert.
+- Bestehende Ortsmarker, Wetter-Badges, Kartenlupe, Shop, Weltzeit und sonstige Seitenfunktionen bleiben unverändert.
