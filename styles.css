@@ -255,3 +255,42 @@ body[data-page="community"] main > .hero, body[data-page="community"] main > .in
 .people-confirm-dialog[data-people-theme="kharai"] .people-confirm-kicker{letter-spacing:.32em}
 .people-confirm-dialog[data-people-theme="meren"] .people-confirm-kicker{letter-spacing:.18em}
 .people-confirm-dialog[data-people-theme="urakai"] .people-confirm-kicker{letter-spacing:.26em}
+
+/* Valdara v35: persistente Akzentfarbe passend zum gespeicherten Volk */
+body[data-people-theme]{--gold:var(--people-accent);--gold2:var(--people-accent);--line:var(--people-border)}
+body[data-people-theme] .brand img{border-color:var(--people-accent);box-shadow:0 0 22px var(--people-glow)}
+body[data-people-theme] .brand small,
+body[data-people-theme] .eyebrow,
+body[data-people-theme] .hero-scroll span,
+body[data-people-theme] .hero-meta .people-accent,
+body[data-people-theme] .feature-icon,
+body[data-people-theme] .feature-card span,
+body[data-people-theme] .episode-card>span,
+body[data-people-theme] .social-symbol,
+body[data-people-theme] .shop-product-kicker,
+body[data-people-theme] .shop-product-bottom a{color:var(--people-accent)}
+body[data-people-theme] .main-nav a.active:after{background:var(--people-accent)}
+body[data-people-theme] .login-btn,
+body[data-people-theme] .glow-btn,
+body[data-people-theme] .member-card,
+body[data-people-theme] .feature-card,
+body[data-people-theme] .shop-product-card,
+body[data-people-theme] .shop-empty-actions,
+body[data-people-theme] .shop-note-panel,
+body[data-people-theme] .shop-teaser-panel{border-color:var(--people-border)}
+body[data-people-theme] .glow-btn{background:linear-gradient(90deg,var(--people-soft),rgba(255,255,255,.025));box-shadow:0 0 24px var(--people-glow),inset 0 0 20px rgba(255,255,255,.02)}
+body[data-people-theme] .glow-btn span,
+body[data-people-theme] .member-icon,
+body[data-people-theme] .member-hero h1 em,
+body[data-people-theme] .account-text-button,
+body[data-people-theme] .account-logout{color:var(--people-accent)}
+body[data-people-theme] .member-icon{border-color:var(--people-border);box-shadow:0 0 18px var(--people-glow)}
+body[data-people-theme] .member-list-item{border-left-color:var(--people-accent)}
+body[data-people-theme] .account-form input:focus,
+body[data-people-theme] .member-card select:focus{border-color:var(--people-accent);box-shadow:0 0 0 3px var(--people-soft)}
+body[data-people-theme] .people-card{border-color:var(--people-border)}
+body[data-people-theme] .people-info .realm{color:var(--people-accent)}
+body[data-people-theme] .map-shell{border-color:var(--people-border)}
+body[data-people-theme] .map-bottom a{color:var(--people-accent)}
+body[data-people-theme] .account-seal{border-color:var(--people-border);color:var(--people-accent);box-shadow:inset 0 0 35px var(--people-soft),0 0 0 10px rgba(255,255,255,.025)}
+body[data-people-theme] .account-tabs .account-tab.active{color:var(--people-accent);border-color:var(--people-border);background:var(--people-soft)}

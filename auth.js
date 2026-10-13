@@ -17,6 +17,36 @@
     if(insertError) throw insertError;
     return created;
   }
+  const sitePeopleThemes = {
+    Dravari:{accent:'#e05245',soft:'rgba(224,82,69,.14)',border:'rgba(224,82,69,.55)',glow:'rgba(224,82,69,.22)'},
+    Durn:{accent:'#9aabbe',soft:'rgba(154,171,190,.14)',border:'rgba(154,171,190,.52)',glow:'rgba(154,171,190,.20)'},
+    Elarin:{accent:'#55d68a',soft:'rgba(85,214,138,.13)',border:'rgba(85,214,138,.52)',glow:'rgba(85,214,138,.20)'},
+    Kharai:{accent:'#f0bd45',soft:'rgba(240,189,69,.14)',border:'rgba(240,189,69,.52)',glow:'rgba(240,189,69,.20)'},
+    Meren:{accent:'#35c8f0',soft:'rgba(53,200,240,.14)',border:'rgba(53,200,240,.52)',glow:'rgba(53,200,240,.20)'},
+    Urakai:{accent:'#d58aff',soft:'rgba(213,138,255,.14)',border:'rgba(213,138,255,.52)',glow:'rgba(213,138,255,.22)'}
+  };
+  function applySitePeopleTheme(name) {
+    const theme = sitePeopleThemes[name];
+    if (!theme) { document.body.removeAttribute('data-people-theme'); return; }
+    document.body.dataset.peopleTheme = name.toLowerCase();
+    const root = document.documentElement;
+    root.style.setProperty('--people-accent', theme.accent);
+    root.style.setProperty('--people-soft', theme.soft);
+    root.style.setProperty('--people-border', theme.border);
+    root.style.setProperty('--people-glow', theme.glow);
+  }
+  async function initSitePeopleTheme() {
+    if (!client) return;
+    try {
+      const {data:{session}} = await client.auth.getSession();
+      if (!session?.user) return;
+      const {data:profile,error} = await client.from('profiles').select('people_id').eq('id',session.user.id).maybeSingle();
+      if (error || !profile?.people_id) return;
+      const {data:person, error:peopleError} = await client.from('peoples').select('name').eq('id',profile.people_id).maybeSingle();
+      if (!peopleError && person?.name) applySitePeopleTheme(person.name);
+    } catch (error) { console.warn('Volksdesign konnte nicht geladen werden:', error); }
+  }
+
   async function initAuthPage() {
     const form=$('#authForm'); if(!form) return;
     if(!client){message($('#authMessage'),'Supabase ist nicht konfiguriert. Bitte Konfiguration prüfen.','error');return;}
@@ -40,7 +70,8 @@
     const loading=$('#memberLoading');
     try {const {data:{session},error:sessionError}=await client.auth.getSession();if(sessionError)throw sessionError;if(!session){location.href='login.html?return=mein-bereich.html';return;}await updateAccountLink(session);
       const user=session.user;let profile=await ensureProfile(user);if(profile.is_active===false){await client.auth.signOut();throw new Error('Dieses Konto ist deaktiviert. Bitte wende dich an die Administration.');}
-      $('#memberGreeting').textContent=profile.display_name||user.email?.split('@')[0]||'Reisende:r';$('#profileDisplayName').value=profile.display_name||'';$('#profileEmail').value=user.email||'';
+      $('#memberGreeting').textContent=profile.display_name||user.email?.split('@')[0]||'Reisende:r';
+      if(profile.people_id){const savedPeople=await client.from('peoples').select('name').eq('id',profile.people_id).maybeSingle();if(!savedPeople.error&&savedPeople.data?.name)applySitePeopleTheme(savedPeople.data.name);}$('#profileDisplayName').value=profile.display_name||'';$('#profileEmail').value=user.email||'';
       const [peopleRes,variantsRes,groupRes,areaRes]=await Promise.all([
         client.from('peoples').select('id,name').order('name'),
         client.from('avatar_variants').select('id,people_id,name,description,image_url').eq('is_active',true),
@@ -56,7 +87,7 @@
       function closePeopleConfirm(){confirmModal.hidden=true;confirmModal.setAttribute('aria-hidden','true');document.body.classList.remove('people-confirm-open');pendingPeopleId=null;}
       function openPeopleConfirm(){const id=sel.value||null;if(profile.people_id===id){message($('#peopleMessage'),'Es hat sich nichts geändert.');return;}if(!allowed&&profile.people_id){message($('#peopleMessage'),'Ein Wechsel ist noch nicht möglich.','error');return;}if(!id){message($('#peopleMessage'),'Bitte wähle zuerst eines der sechs Völker aus.','error');return;}pendingPeopleId=id;applyPeopleTheme();message($('#peopleConfirmMessage'),'');confirmModal.hidden=false;confirmModal.setAttribute('aria-hidden','false');document.body.classList.add('people-confirm-open');$('#peopleConfirmCancel').focus();}
       sel.addEventListener('change',applyPeopleTheme);$('#savePeople').addEventListener('click',openPeopleConfirm);$('#peopleConfirmClose').addEventListener('click',closePeopleConfirm);$('#peopleConfirmCancel').addEventListener('click',closePeopleConfirm);confirmModal.addEventListener('click',ev=>{if(ev.target===confirmModal)closePeopleConfirm();});document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!confirmModal.hidden)closePeopleConfirm();});
-      $('#peopleConfirmAccept').addEventListener('click',async()=>{if(!pendingPeopleId)return;const btn=$('#peopleConfirmAccept');btn.disabled=true;message($('#peopleConfirmMessage'),'Deine Auswahl wird gespeichert …');try{const {error}=await client.from('profiles').update({people_id:pendingPeopleId,updated_at:new Date().toISOString()}).eq('id',user.id);if(error)throw error;message($('#peopleMessage'),'Deine Auswahl wurde gespeichert.','success');closePeopleConfirm();location.reload();}catch(error){message($('#peopleConfirmMessage'),friendly(error),'error');}finally{btn.disabled=false;}});
+      $('#peopleConfirmAccept').addEventListener('click',async()=>{if(!pendingPeopleId)return;const btn=$('#peopleConfirmAccept');btn.disabled=true;message($('#peopleConfirmMessage'),'Deine Auswahl wird gespeichert …');try{const {error}=await client.from('profiles').update({people_id:pendingPeopleId,updated_at:new Date().toISOString()}).eq('id',user.id);if(error)throw error;const chosen=people.find(p=>p.id===pendingPeopleId);if(chosen)applySitePeopleTheme(chosen.name);message($('#peopleMessage'),'Deine Auswahl wurde gespeichert.','success');closePeopleConfirm();location.reload();}catch(error){message($('#peopleConfirmMessage'),friendly(error),'error');}finally{btn.disabled=false;}});
       const avatarBox=$('#avatarChoices');const filtered=variants.filter(v=>!profile.people_id||v.people_id===profile.people_id);if(variantsRes.error){avatarBox.innerHTML='<p class="member-muted">Avatar-Varianten konnten nicht geladen werden.</p>';}else if(!filtered.length){avatarBox.innerHTML='<p class="member-muted">Für die aktuelle Auswahl sind noch keine aktiven Avatar-Varianten hinterlegt.</p>';}else{avatarBox.innerHTML=filtered.map(v=>`<button class="avatar-choice" type="button" data-avatar-id="${esc(v.id)}" title="${esc(v.description||v.name)}">${v.image_url?`<img src="${esc(v.image_url)}" alt="">`:'<span class="avatar-placeholder">✧</span>'}<span>${esc(v.name)}</span></button>`).join('');avatarBox.querySelectorAll('[data-avatar-id]').forEach(b=>b.addEventListener('click',()=>{message($('#avatarMessage'),'Die Tabelle characters speichert die Avatar-Zuordnung. Eine sichere Änderung wird erst aktiviert, wenn die Character-RLS-Regeln dies für den eigenen Datensatz erlauben.');}));}
       const groupIds=(groupRes.data||[]).map(x=>x.group_id);const areaIds=(areaRes.data||[]).map(x=>x.game_area_id);let rows=[];
       if(groupIds.length){const r=await client.from('groups').select('id,name,description').in('id',groupIds);if(!r.error)rows.push(...(r.data||[]).map(x=>({...x,kind:'Gruppe'})));}
@@ -68,5 +99,5 @@
     }catch(e){console.error(e);loading.hidden=true;message($('#memberError'),friendly(e),'error');}
   }
   function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  document.addEventListener('DOMContentLoaded',()=>{initAuthPage();initMemberPage();if(client)client.auth.onAuthStateChange((_event,session)=>{updateAccountLink(session);});});
+  document.addEventListener('DOMContentLoaded',()=>{initAuthPage();initMemberPage();initSitePeopleTheme();if(client)client.auth.onAuthStateChange((_event,session)=>{updateAccountLink(session);if(session) initSitePeopleTheme();else applySitePeopleTheme('');});});
 })();
