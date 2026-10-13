@@ -326,3 +326,25 @@ body[data-people-theme] .account-tabs .account-tab.active{color:var(--people-acc
 /* v39 social features */
 .member-feature-card .account-form{margin-top:18px}.member-subsection{margin-top:24px;padding-top:18px;border-top:1px solid rgba(215,173,88,.16)}.member-subsection h3{font:600 17px Cinzel,serif;margin:0 0 12px;color:#f1f3f5}.member-feature-card textarea,.member-feature-card select{width:100%;margin:6px 0 14px;padding:12px 13px;border:1px solid rgba(215,173,88,.22);background:rgba(3,8,15,.72);color:var(--text);border-radius:3px;font:inherit}.member-feature-card select option{background:#091321;color:#f1f3f5}.social-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}.social-row:last-child{border-bottom:0}.social-row-main{min-width:0;display:grid;gap:3px}.social-row-main strong{font-size:13px}.social-row-main small{color:var(--muted);font-size:11px;overflow-wrap:anywhere}.social-row-actions{display:flex;gap:6px;flex-wrap:wrap}.social-action{border:1px solid rgba(215,173,88,.35);background:rgba(215,173,88,.08);padding:6px 9px;font-size:11px;cursor:pointer}.social-action:disabled{opacity:.5;cursor:wait}.social-empty{color:var(--muted);font-size:12px;padding:8px 0}.social-story{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:700px){.social-row{flex-direction:column}.social-row-actions{width:100%}.social-action{flex:1}}
+
+/* v40: separate member areas selected by URL query */
+body[data-page="member"][data-member-view="character"] .member-feature-grid { display:none !important; }
+body[data-page="member"][data-member-view="messages"] #characterPage,
+body[data-page="member"][data-member-view="messages"] #memberGrid,
+body[data-page="member"][data-member-view="messages"] .member-bottom,
+body[data-page="member"][data-member-view="friends"] #characterPage,
+body[data-page="member"][data-member-view="friends"] #memberGrid,
+body[data-page="member"][data-member-view="friends"] .member-bottom,
+body[data-page="member"][data-member-view="inventory"] #characterPage,
+body[data-page="member"][data-member-view="inventory"] #memberGrid,
+body[data-page="member"][data-member-view="inventory"] .member-bottom { display:none !important; }
+body[data-page="member"][data-member-view="messages"] .member-feature-grid,
+body[data-page="member"][data-member-view="friends"] .member-feature-grid,
+body[data-page="member"][data-member-view="inventory"] .member-feature-grid { display:grid !important; grid-template-columns:minmax(0,1fr); }
+body[data-page="member"][data-member-view="messages"] #memberFriends,
+body[data-page="member"][data-member-view="messages"] #memberInventory,
+body[data-page="member"][data-member-view="friends"] #memberMessages,
+body[data-page="member"][data-member-view="friends"] #memberInventory,
+body[data-page="member"][data-member-view="inventory"] #memberMessages,
+body[data-page="member"][data-member-view="inventory"] #memberFriends { display:none !important; }
+body[data-page="member"] .member-side-link.active { color:var(--gold2); border-color:var(--line); background:rgba(215,173,88,.08); }

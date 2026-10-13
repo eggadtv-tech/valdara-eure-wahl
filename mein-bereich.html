@@ -4,10 +4,10 @@
 <body data-page="member"><div class="ambient ambient-a"></div><div class="ambient ambient-b"></div><header class="site-header"><a class="brand" href="index.html"><img src="assets/valdara-logo.jpg" alt="Valdara Logo"><span>VALDARA<small>EURE WAHL</small></span></a><nav class="main-nav"><a href="index.html">Startseite</a><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="abstimmungen.html">Abstimmungen</a><a href="community.html">Community</a><a id="profileNavLink" href="mein-bereich.html" hidden>Profil</a></nav><div class="header-actions"><a class="login-btn" id="accountLink" href="login.html">Anmelden</a><button class="menu-btn" id="menuBtn" type="button">☰</button></div></header>
 <main class="member-main member-layout"><aside class="member-sidebar" aria-label="Mitglieder-Navigation">
 <nav>
-<a class="member-side-link active" href="#characterPage"><span>◈</span> Charakter</a>
-<a class="member-side-link" href="#memberMessages"><span>✉</span> Nachrichten</a>
-<a class="member-side-link" href="#memberFriends"><span>♧</span> Freunde</a>
-<a class="member-side-link" href="#memberInventory"><span>◇</span> Inventar</a>
+<a class="member-side-link active" href="mein-bereich.html?view=character"><span>◈</span> Charakter</a>
+<a class="member-side-link" href="mein-bereich.html?view=messages"><span>✉</span> Nachrichten</a>
+<a class="member-side-link" href="mein-bereich.html?view=friends"><span>♧</span> Freunde</a>
+<a class="member-side-link" href="mein-bereich.html?view=inventory"><span>◇</span> Inventar</a>
 <a class="member-side-link" href="community.html"><span>☷</span> Forum <span class="member-side-tag">Öffnen ↗</span></a>
 </nav>
 </aside>
@@ -29,4 +29,29 @@
 </div></main>
 <div id="peopleConfirmModal" class="people-confirm-backdrop" hidden aria-hidden="true"><section class="people-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="peopleConfirmTitle" aria-describedby="peopleConfirmText"><button id="peopleConfirmClose" class="people-confirm-close" type="button" aria-label="Fenster schließen">×</button><span class="people-confirm-kicker">VALDARA · DEINE ZUGEHÖRIGKEIT</span><span id="peopleConfirmSigil" class="people-confirm-sigil" aria-hidden="true">✧</span><h2 id="peopleConfirmTitle">Bist du dir sicher?</h2><p id="peopleConfirmText">Du möchtest dich einem Volk anschließen.</p><p class="people-confirm-warning">Mit deiner Bestätigung wird diese Auswahl in deinem Profil gespeichert. Du kannst dein Volk anschließend <strong>7 Tage lang nicht wechseln</strong>.</p><p class="people-confirm-note">Bitte prüfe deine Entscheidung, bevor du fortfährst.</p><div class="people-confirm-actions"><button id="peopleConfirmCancel" class="people-confirm-cancel" type="button">Abbrechen</button><button id="peopleConfirmAccept" class="people-confirm-accept" type="button">Verbindlich wählen <span>→</span></button></div><p id="peopleConfirmMessage" class="account-message" role="status"></p></section></div>
 <footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="community.html">Community</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p></footer>
+<script>
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const view = ['character','messages','friends','inventory'].includes(params.get('view')) ? params.get('view') : 'character';
+  document.body.dataset.memberView = view;
+  const labels = {character:'Charakter',messages:'Nachrichten',friends:'Freunde',inventory:'Inventar'};
+  document.title = labels[view] + ' · VALDARA – Eure Wahl';
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.member-side-link').forEach(function(link){
+      const href = link.getAttribute('href') || '';
+      const isForum = href === 'community.html';
+      const linkView = href.includes('view=messages') ? 'messages' : href.includes('view=friends') ? 'friends' : href.includes('view=inventory') ? 'inventory' : href.includes('view=character') ? 'character' : '';
+      link.classList.toggle('active', !isForum && linkView === view);
+      if (isForum) link.classList.remove('active');
+    });
+    const hero = document.querySelector('.member-hero');
+    if (hero) {
+      const title = hero.querySelector('h1');
+      const subtitle = hero.querySelector('p');
+      if (title) title.innerHTML = labels[view] === 'Charakter' ? 'Willkommen zurück, <em id="memberGreeting">Reisende:r</em>' : labels[view];
+      if (subtitle) subtitle.textContent = ({character:'Hier beginnt dein persönlicher Weg durch Valdara.',messages:'Deine privaten Nachrichten mit anderen Reisenden.',friends:'Verwalte Freundschaften und offene Anfragen.',inventory:'Die Gegenstände deines Charakters.'})[view];
+    }
+  });
+})();
+</script>
 <script src="supabase-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="auth.js"></script><script src="ki-chat-widget.js"></script></body></html>
