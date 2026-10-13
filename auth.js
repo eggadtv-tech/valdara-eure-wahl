@@ -88,7 +88,34 @@
       function openPeopleConfirm(){const id=sel.value||null;if(profile.people_id===id){message($('#peopleMessage'),'Es hat sich nichts geändert.');return;}if(!allowed&&profile.people_id){message($('#peopleMessage'),'Ein Wechsel ist noch nicht möglich.','error');return;}if(!id){message($('#peopleMessage'),'Bitte wähle zuerst eines der sechs Völker aus.','error');return;}pendingPeopleId=id;applyPeopleTheme();message($('#peopleConfirmMessage'),'');confirmModal.hidden=false;confirmModal.setAttribute('aria-hidden','false');document.body.classList.add('people-confirm-open');$('#peopleConfirmCancel').focus();}
       sel.addEventListener('change',applyPeopleTheme);$('#savePeople').addEventListener('click',openPeopleConfirm);$('#peopleConfirmClose').addEventListener('click',closePeopleConfirm);$('#peopleConfirmCancel').addEventListener('click',closePeopleConfirm);confirmModal.addEventListener('click',ev=>{if(ev.target===confirmModal)closePeopleConfirm();});document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!confirmModal.hidden)closePeopleConfirm();});
       $('#peopleConfirmAccept').addEventListener('click',async()=>{if(!pendingPeopleId)return;const btn=$('#peopleConfirmAccept');btn.disabled=true;message($('#peopleConfirmMessage'),'Deine Auswahl wird gespeichert …');try{const {error}=await client.from('profiles').update({people_id:pendingPeopleId,updated_at:new Date().toISOString()}).eq('id',user.id);if(error)throw error;const chosen=people.find(p=>p.id===pendingPeopleId);if(chosen)applySitePeopleTheme(chosen.name);message($('#peopleMessage'),'Deine Auswahl wurde gespeichert.','success');closePeopleConfirm();location.reload();}catch(error){message($('#peopleConfirmMessage'),friendly(error),'error');}finally{btn.disabled=false;}});
-      const avatarBox=$('#avatarChoices');const filtered=variants.filter(v=>!profile.people_id||v.people_id===profile.people_id);if(variantsRes.error){avatarBox.innerHTML='<p class="member-muted">Avatar-Varianten konnten nicht geladen werden.</p>';}else if(!filtered.length){avatarBox.innerHTML='<p class="member-muted">Für die aktuelle Auswahl sind noch keine aktiven Avatar-Varianten hinterlegt.</p>';}else{avatarBox.innerHTML=filtered.map(v=>`<button class="avatar-choice" type="button" data-avatar-id="${esc(v.id)}" title="${esc(v.description||v.name)}">${v.image_url?`<img src="${esc(v.image_url)}" alt="">`:'<span class="avatar-placeholder">✧</span>'}<span>${esc(v.name)}</span></button>`).join('');avatarBox.querySelectorAll('[data-avatar-id]').forEach(b=>b.addEventListener('click',()=>{message($('#avatarMessage'),'Die Tabelle characters speichert die Avatar-Zuordnung. Eine sichere Änderung wird erst aktiviert, wenn die Character-RLS-Regeln dies für den eigenen Datensatz erlauben.');}));}
+      const avatarBox=$('#avatarChoices');
+      const filtered=variants.filter(v=>profile.people_id&&v.people_id===profile.people_id);
+      let character=null;
+      const characterRes=await client.from('characters').select('id,user_id,people_id,avatar_variant_id,display_name').eq('user_id',user.id).maybeSingle();
+      if(characterRes.error){console.warn('Charakter konnte nicht geladen werden:',characterRes.error);}
+      else character=characterRes.data;
+      if(variantsRes.error){avatarBox.innerHTML='<p class="member-muted">Avatar-Varianten konnten nicht geladen werden.</p>';}
+      else if(!profile.people_id){avatarBox.innerHTML='<p class="member-muted">Wähle zuerst dein Volk aus. Danach werden die passenden Erscheinungsbilder angezeigt.</p>';}
+      else if(!filtered.length){avatarBox.innerHTML='<p class="member-muted">Für dieses Volk sind noch keine aktiven Avatar-Varianten hinterlegt.</p>';}
+      else{
+        avatarBox.innerHTML=filtered.map(v=>`<button class="avatar-choice${character?.avatar_variant_id===v.id?' is-selected':''}" type="button" data-avatar-id="${esc(v.id)}" title="${esc(v.description||v.name)}" aria-pressed="${character?.avatar_variant_id===v.id?'true':'false'}">${v.image_url?`<img src="${esc(v.image_url)}" alt="">`:'<span class="avatar-placeholder">✧</span>'}<span>${esc(v.name)}</span>${character?.avatar_variant_id===v.id?'<small>Ausgewählt</small>':''}</button>`).join('');
+        avatarBox.querySelectorAll('[data-avatar-id]').forEach(btn=>btn.addEventListener('click',async()=>{
+          const variant=filtered.find(v=>v.id===btn.dataset.avatarId);if(!variant)return;
+          if(!profile.people_id||variant.people_id!==profile.people_id){message($('#avatarMessage'),'Diese Variante gehört nicht zu deinem ausgewählten Volk.','error');return;}
+          avatarBox.querySelectorAll('button').forEach(b=>b.disabled=true);message($('#avatarMessage'),'Deine Avatar-Auswahl wird gespeichert …');
+          try{
+            const payload={user_id:user.id,people_id:profile.people_id,avatar_variant_id:variant.id,display_name:profile.display_name||user.email?.split('@')[0]||'Reisende:r'};
+            let saveRes;
+            if(character){saveRes=await client.from('characters').update({people_id:payload.people_id,avatar_variant_id:payload.avatar_variant_id,display_name:payload.display_name,updated_at:new Date().toISOString()}).eq('user_id',user.id).select('id,user_id,people_id,avatar_variant_id,display_name').single();}
+            else{saveRes=await client.from('characters').insert({...payload,id:crypto.randomUUID()}).select('id,user_id,people_id,avatar_variant_id,display_name').single();}
+            if(saveRes.error)throw saveRes.error;
+            character=saveRes.data;
+            avatarBox.querySelectorAll('[data-avatar-id]').forEach(b=>{const selected=b.dataset.avatarId===variant.id;b.classList.toggle('is-selected',selected);b.setAttribute('aria-pressed',String(selected));const old=b.querySelector('small');if(old)old.remove();if(selected){const tag=document.createElement('small');tag.textContent='Ausgewählt';b.appendChild(tag);}});
+            message($('#avatarMessage'),'Dein Erscheinungsbild wurde gespeichert.','success');
+          }catch(error){console.error('Avatar konnte nicht gespeichert werden:',error);message($('#avatarMessage'),error?.code==='42501'?'Die Datenbank erlaubt das Speichern noch nicht. Bitte zuerst die RLS-Regeln aus der Datei AVATAR_SETUP_v36.sql anwenden.':friendly(error),'error');}
+          finally{avatarBox.querySelectorAll('button').forEach(b=>b.disabled=false);}
+        }));
+      }
       const groupIds=(groupRes.data||[]).map(x=>x.group_id);const areaIds=(areaRes.data||[]).map(x=>x.game_area_id);let rows=[];
       if(groupIds.length){const r=await client.from('groups').select('id,name,description').in('id',groupIds);if(!r.error)rows.push(...(r.data||[]).map(x=>({...x,kind:'Gruppe'})));}
       if(areaIds.length){const r=await client.from('game_areas').select('id,name,description').in('id',areaIds);if(!r.error)rows.push(...(r.data||[]).map(x=>({...x,kind:'Spielbereich'})));}
