@@ -149,8 +149,101 @@
       $('#memberGroups').innerHTML=rows.length?rows.map(r=>`<div class="member-list-item"><span>${esc(r.kind)}</span><strong>${esc(r.name)}</strong><small>${esc(r.description||'')}</small></div>`).join(''):'<p class="member-muted">Du bist aktuell noch keiner Gruppe und keinem Spielbereich zugeordnet.</p>';
       $('#profileForm').addEventListener('submit',async ev=>{ev.preventDefault();const name=$('#profileDisplayName').value.trim();if(!name){message($('#profileMessage'),'Bitte gib einen Anzeigenamen ein.','error');return;}const {error}=await client.from('profiles').update({display_name:name,updated_at:new Date().toISOString()}).eq('id',user.id);message($('#profileMessage'),error?friendly(error):'Dein Profil wurde gespeichert.',error?'error':'success');if(!error)$('#memberGreeting').textContent=name;});
       $('#logoutButton').addEventListener('click',async()=>{const {error}=await client.auth.signOut();if(error){message($('#memberError'),friendly(error),'error');return;}location.href='index.html';});
+      await initSocialFeatures(user,profile);
       loading.hidden=true;$('#memberContent').hidden=false;
     }catch(e){console.error(e);loading.hidden=true;message($('#memberError'),friendly(e),'error');}
+  }
+
+  async function initSocialFeatures(user, profile) {
+    const $id = (id) => document.getElementById(id);
+    const setStatus = (id, text, type='') => message($id(id), text, type);
+    const empty = (text) => `<p class="social-empty">${esc(text)}</p>`;
+    const [directoryRes] = await Promise.all([
+      client.from('profiles').select('id,display_name').order('display_name').limit(250)
+    ]);
+    const directory = (directoryRes.error ? [] : (directoryRes.data || [])).filter(p => p.id !== user.id);
+    const directoryOptions = '<option value="">Mitglied auswählen …</option>' + directory.map(p => `<option value="${esc(p.id)}">${esc(p.display_name || 'Reisende:r')}</option>`).join('');
+    for (const id of ['messageRecipient','friendRecipient']) {
+      const select = $id(id);
+      if (!select) continue;
+      select.innerHTML = directoryOptions;
+      if (directoryRes.error) select.innerHTML = '<option value="">Mitgliederliste nicht verfügbar</option>';
+    }
+    if (directoryRes.error) {
+      setStatus('privateMessageStatus', 'Die Mitgliederliste ist durch die aktuellen Profil-Berechtigungen nicht lesbar. Dafür müssen wir eine sichere Mitglieder-Suche ergänzen.', 'error');
+      setStatus('friendRequestStatus', 'Die Mitgliederliste ist durch die aktuellen Profil-Berechtigungen nicht lesbar. Dafür müssen wir eine sichere Mitglieder-Suche ergänzen.', 'error');
+    }
+
+    const loadMessages = async () => {
+      const box = $id('privateMessageList');
+      const { data, error } = await client.from('private_messages').select('id,sender_id,recipient_id,content,created_at,read_at').or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`).order('created_at',{ascending:false}).limit(50);
+      if (error) { box.innerHTML = empty('Nachrichten konnten nicht geladen werden: ' + error.message); return; }
+      const names = new Map(directory.map(p=>[p.id,p.display_name||'Reisende:r']));
+      names.set(user.id,profile.display_name||user.email?.split('@')[0]||'Du');
+      box.innerHTML = data?.length ? data.map(m => `<div class="social-row"><div class="social-row-main"><strong>${m.sender_id===user.id?'An: ':'Von: '}${esc(names.get(m.sender_id===user.id?m.recipient_id:m.sender_id)||'Mitglied')}</strong><small>${esc(new Date(m.created_at).toLocaleString('de-DE'))}</small><span class="social-story">${esc(m.content)}</span></div></div>`).join('') : empty('Noch keine Nachrichten vorhanden.');
+    };
+    $id('privateMessageForm')?.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const recipient = $id('messageRecipient').value;
+      const content = $id('privateMessageText').value.trim();
+      if (!recipient || !content) { setStatus('privateMessageStatus','Bitte Empfänger und Nachricht ausfüllen.','error'); return; }
+      const btn = ev.currentTarget.querySelector('button[type="submit"]'); btn.disabled=true;
+      setStatus('privateMessageStatus','Nachricht wird gesendet …');
+      try {
+        const {error} = await client.from('private_messages').insert({sender_id:user.id,recipient_id:recipient,content});
+        if(error) throw error;
+        $id('privateMessageText').value='';
+        setStatus('privateMessageStatus','Nachricht wurde gesendet.','success');
+        await loadMessages();
+      } catch(error) { setStatus('privateMessageStatus',friendly(error),'error'); }
+      finally { btn.disabled=false; }
+    });
+    await loadMessages();
+
+    const loadFriends = async () => {
+      const [res, profilesRes] = await Promise.all([
+        client.from('friendships').select('id,requester_id,addressee_id,status,created_at').or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`).order('created_at',{ascending:false}).limit(100),
+        client.from('profiles').select('id,display_name').limit(250)
+      ]);
+      const incoming=$id('friendIncomingList'), list=$id('friendList');
+      if(res.error){incoming.innerHTML=empty('Anfragen konnten nicht geladen werden: '+res.error.message);list.innerHTML='';return;}
+      const profiles=new Map((profilesRes.data||directory).map(p=>[p.id,p.display_name||'Reisende:r']));
+      profiles.set(user.id,profile.display_name||'Du');
+      const rows=res.data||[];
+      const pending=rows.filter(r=>r.status==='pending'&&r.addressee_id===user.id);
+      incoming.innerHTML=pending.length?pending.map(r=>`<div class="social-row"><div class="social-row-main"><strong>${esc(profiles.get(r.requester_id)||'Mitglied')}</strong><small>Freundschaftsanfrage · ${esc(new Date(r.created_at).toLocaleDateString('de-DE'))}</small></div><div class="social-row-actions"><button class="social-action" data-friend-action="accepted" data-id="${esc(r.id)}">Annehmen</button><button class="social-action" data-friend-action="declined" data-id="${esc(r.id)}">Ablehnen</button></div></div>`).join(''):empty('Keine offenen Anfragen.');
+      const others=rows.filter(r=>!(r.status==='pending'&&r.addressee_id===user.id));
+      list.innerHTML=others.length?others.map(r=>`<div class="social-row"><div class="social-row-main"><strong>${esc(profiles.get(r.requester_id===user.id?r.addressee_id:r.requester_id)||'Mitglied')}</strong><small>${r.status==='accepted'?'Freundschaft bestätigt':r.status==='declined'?'Anfrage abgelehnt': 'Anfrage gesendet'}</small></div></div>`).join(''):empty('Noch keine Freunde oder gesendeten Anfragen.');
+      incoming.querySelectorAll('[data-friend-action]').forEach(btn=>btn.addEventListener('click',async()=>{
+        btn.disabled=true;
+        const status=btn.dataset.friendAction;
+        const {error}=await client.from('friendships').update({status,updated_at:new Date().toISOString()}).eq('id',btn.dataset.id);
+        if(error){setStatus('friendRequestStatus',friendly(error),'error');btn.disabled=false;return;}
+        setStatus('friendRequestStatus',status==='accepted'?'Freundschaft angenommen.':'Anfrage abgelehnt.','success');
+        await loadFriends();
+      }));
+    };
+    $id('friendRequestForm')?.addEventListener('submit',async ev=>{
+      ev.preventDefault();
+      const addressee=$id('friendRecipient').value;
+      if(!addressee){setStatus('friendRequestStatus','Bitte wähle ein Mitglied aus.','error');return;}
+      const btn=ev.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;
+      try{
+        const {error}=await client.from('friendships').insert({requester_id:user.id,addressee_id:addressee,status:'pending'});
+        if(error)throw error;
+        setStatus('friendRequestStatus','Freundschaftsanfrage wurde gesendet.','success');
+        await loadFriends();
+      }catch(error){setStatus('friendRequestStatus',friendly(error),'error');}
+      finally{btn.disabled=false;}
+    });
+    await loadFriends();
+
+    const inventoryBox=$id('characterInventoryList');
+    const charRes=await client.from('characters').select('id').eq('user_id',user.id).maybeSingle();
+    if(charRes.error||!charRes.data){inventoryBox.innerHTML=empty('Lege zuerst deinen Charakter an.');return;}
+    const inventoryRes=await client.from('character_inventory').select('id,item_name,description,quantity,metadata,created_at').eq('character_id',charRes.data.id).order('created_at',{ascending:false});
+    if(inventoryRes.error){inventoryBox.innerHTML=empty('Inventar konnte nicht geladen werden: '+inventoryRes.error.message);return;}
+    inventoryBox.innerHTML=inventoryRes.data?.length?inventoryRes.data.map(item=>`<div class="social-row"><div class="social-row-main"><strong>${esc(item.item_name)}${item.quantity>1?' × '+item.quantity:''}</strong><small>${esc(item.description||'')}</small></div></div>`).join(''):empty('Dein Inventar ist derzeit leer. Gegenstände werden später ergänzt.');
   }
   function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   document.addEventListener('DOMContentLoaded',()=>{initAuthPage();initMemberPage();initSitePeopleTheme();if(client)client.auth.onAuthStateChange((_event,session)=>{updateAccountLink(session);if(session) initSitePeopleTheme();else applySitePeopleTheme('');});});
