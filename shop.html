@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#07101d">
+<title>Valdara-Shop – Eure Wahl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="shop">
+<div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+<header class="site-header">
+<a class="brand" href="index.html" aria-label="Valdara Startseite"><img src="assets/valdara-logo.jpg" alt="Valdara Logo"><span>VALDARA<small>EURE WAHL</small></span></a>
+<nav class="main-nav" id="mainNav"><a data-page="start" href="index.html">Startseite</a><a data-page="welt" href="welt.html">Welt</a><a data-page="voelker" href="voelker.html">Völker</a><a data-page="geschichten" href="geschichten.html">Geschichten</a><a data-page="entscheidungen" href="abstimmungen.html">Abstimmungen</a><a data-page="community" href="community.html">Community</a><a data-page="shop" href="shop.html" class="active" aria-current="page">Shop</a></nav>
+<div class="header-actions"><a class="login-btn" href="https://valdara-shop.fourthwall.com/" target="_blank" rel="noopener">Shop öffnen ↗</a><button class="menu-btn" id="menuBtn" aria-label="Menü öffnen">☰</button></div>
+</header>
+<main class="shop-main">
+<section class="shop-hero"><div class="shop-hero-copy"><span class="eyebrow">VALDARA · EURE WAHL</span><h1>Ein Stück Valdara<br><em>für eure Welt.</em></h1><p>Entdeckt Motive aus den sechs Reichen – von den Völkern Valdaras bis zu den Symbolen unserer gemeinsamen Geschichte.</p><a class="glow-btn" href="#shop-produkte">Kollektion entdecken <span>↓</span></a></div><div class="shop-seal" aria-hidden="true"><div class="shop-seal-inner"><span>VALDARA</span><i>✦</i><small>EURE WAHL</small></div></div></section>
+<section class="section shop-catalog" id="shop-produkte"><div class="section-heading"><span class="eyebrow">DIE KOLLEKTION</span><h2>Aus Valdara. Für euch.</h2><p>Die verfügbaren Produkte werden aus unserem Fourthwall-Shop geladen. Wählt ein Motiv aus und seht euch das Produkt im Shop genauer an.</p></div>
+<div class="shop-status" id="shopStatus" role="status" aria-live="polite">Die Kollektion wird geladen …</div><div class="shop-product-grid" id="shopProducts"></div>
+<div class="shop-empty-actions" id="shopFallback" hidden><p>Der Produktkatalog ist gerade nicht erreichbar. Ihr könnt trotzdem direkt im Valdara-Shop stöbern.</p><a class="glow-btn" href="https://valdara-shop.fourthwall.com/" target="_blank" rel="noopener">Fourthwall-Shop öffnen <span>↗</span></a></div>
+</section>
+<section class="section shop-note"><div class="shop-note-panel"><span class="eyebrow">EURE WAHL. EURE GESCHICHTE.</span><h2>Mehr als nur ein Motiv.</h2><p>Jeder Kauf unterstützt das Valdara-Projekt und hilft dabei, diese Welt gemeinsam weiterzuentwickeln.</p><a href="https://valdara-shop.fourthwall.com/" target="_blank" rel="noopener" class="text-link">Zum offiziellen Shop ↗</a></div></section>
+</main>
+<footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="index.html">Startseite</a><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="abstimmungen.html">Abstimmungen</a><a href="community.html">Community</a><a href="shop.html">Shop</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p><div class="footer-bottom"><span>© 2026 VALDARA – EURE WAHL</span><span>Die Welt wächst mit euch.</span></div></footer>
+<script src="supabase-config.js"></script><script src="shop.js"></script>
+<script>const menu=document.querySelector('#menuBtn'),nav=document.querySelector('#mainNav');menu?.addEventListener('click',()=>nav?.classList.toggle('open'));nav?.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('open')));</script>
+</body></html>
