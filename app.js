@@ -48,15 +48,16 @@ function updateMapLighting() {
     const parts = new Intl.DateTimeFormat('en-GB', {timeZone: worldClockConfig.timezone || 'Europe/Berlin', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date());
     hour = Number(parts.find(part => part.type === 'hour')?.value ?? hour) + Number(parts.find(part => part.type === 'minute')?.value ?? 0) / 60;
   } catch (error) { console.warn('Weltzeit-Zeitzone nicht lesbar; verwende lokale Zeit.', error); }
-  // Sanfte Dämmerung: hellster Abschnitt zwischen 09 und 16 Uhr, Nacht zwischen 22 und 04 Uhr.
+  // Deutlichere Übergänge: Nacht kräftiger, Dämmerung beginnt früher sichtbar.
+  // Die Zeiten beziehen sich auf die konfigurierte Valdara-Weltzeitzone.
   let night = 0;
-  if (hour < 4 || hour >= 22) night = 0.42;
-  else if (hour < 7) night = 0.42 * (7 - hour) / 3;
-  else if (hour < 9) night = 0.10 * (9 - hour) / 2;
-  else if (hour >= 16 && hour < 19) night = 0.10 * (hour - 16) / 3;
-  else if (hour >= 19 && hour < 22) night = 0.10 + 0.32 * (hour - 19) / 3;
-  overlay.style.setProperty('--night-opacity', String(Math.max(0, Math.min(0.42, night))));
-  overlay.dataset.phase = hour < 5 || hour >= 21 ? 'night' : hour < 8 || hour >= 18 ? 'dusk' : 'day';
+  if (hour < 4 || hour >= 22) night = 0.62;
+  else if (hour < 7) night = 0.62 * (7 - hour) / 3;
+  else if (hour < 9) night = 0.16 * (9 - hour) / 2;
+  else if (hour >= 16 && hour < 19) night = 0.16 + 0.18 * (hour - 16) / 3;
+  else if (hour >= 19 && hour < 22) night = 0.34 + 0.28 * (hour - 19) / 3;
+  overlay.style.setProperty('--night-opacity', String(Math.max(0, Math.min(0.62, night))));
+  overlay.dataset.phase = hour < 4 || hour >= 22 ? 'night' : hour < 9 ? 'dawn' : hour >= 16 ? 'dusk' : 'day';
 }
 
 async function loadWorldClockConfig() {

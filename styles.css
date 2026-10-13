@@ -71,8 +71,9 @@
 .map-view{isolation:isolate}
 /* Dynamische Tag-/Dämmerungs-/Nachtbeleuchtung: über dem Kartenbild, unter Markern und Wetter. */
 .map-time-lighting{position:absolute;inset:0;z-index:2;pointer-events:none;background:rgba(5,12,35,var(--night-opacity,0));mix-blend-mode:multiply;transition:background 60s linear}
-.map-time-lighting[data-phase="dusk"]{background:linear-gradient(180deg,rgba(240,133,56,calc(var(--night-opacity,0) * .22)),rgba(15,24,62,var(--night-opacity,0)));}
-.map-time-lighting[data-phase="night"]{background:rgba(5,12,35,var(--night-opacity,0));}
+.map-time-lighting[data-phase="dawn"]{background:linear-gradient(180deg,rgba(239,133,82,calc(var(--night-opacity,0) * .72)),rgba(76,82,130,var(--night-opacity,0)));}
+.map-time-lighting[data-phase="dusk"]{background:linear-gradient(180deg,rgba(240,133,56,calc(var(--night-opacity,0) * .72)),rgba(15,24,62,var(--night-opacity,0)));}
+.map-time-lighting[data-phase="night"]{background:rgba(3,7,25,var(--night-opacity,0));}
 .map-sector-grid{position:absolute;inset:0;z-index:20;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));opacity:0;transition:opacity .2s;pointer-events:none}
 .map-view.grid-enabled .map-sector-grid,.map-view.grid-enabled .map-sector-grid:focus-within{opacity:1;pointer-events:auto}
 .map-sector-grid button{display:flex;align-items:center;justify-content:center;border:1px solid rgba(242,209,138,.0);background:rgba(3,9,17,0);cursor:zoom-in;transition:background .18s,border-color .18s;min-width:0;min-height:0}
