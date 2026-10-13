@@ -253,52 +253,6 @@ function renderWeatherLayer(rows) {
   applyWeatherVisibility();
 }
 
-
-const CORE_WEATHER_REFERENCE_KEYS = [
-  'AELVARIS_KELOWNA','AELVARIS_PRINCE_GEORGE','AELVARIS_VANCOUVER',
-  'DURNAKHAR_DAVOS','DURNAKHAR_INTERLAKEN','DURNAKHAR_ZERMATT',
-  'GORVATH_BATUMI','GORVATH_TBILISI','GORVATH_VLADIKAVKAZ',
-  'KHARUUN_BERGEN','KHARUUN_TROMSO','KHARUUN_TRONDHEIM',
-  'VALMERIS_FRANKFURT','VALMERIS_HANNOVER','VALMERIS_MUNICH',
-  'ZARVETH_ALMATY','ZARVETH_ASHGABAT','ZARVETH_TASHKENT'
-];
-
-function renderWeatherReferencePoints(rows) {
-  mapView.querySelectorAll('.map-weather-reference').forEach(el => el.remove());
-  if (!Array.isArray(rows)) return;
-
-  rows.forEach(row => {
-    if (!CORE_WEATHER_REFERENCE_KEYS.includes(row.reference_point)) return;
-    const x = Number(row.valdara_x);
-    const y = Number(row.valdara_y);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-
-    const point = document.createElement('span');
-    point.className = 'map-weather-reference';
-    point.style.left = `${Math.max(0, Math.min(5000, x)) / 50}%`;
-    point.style.top = `${Math.max(0, Math.min(5000, y)) / 50}%`;
-    const city = row.city || row.reference_point.replace(/^[A-Z]+_/, '').replaceAll('_', ' ');
-    const realm = row.realm_name || '';
-    point.title = `Wetterreferenz: ${city}${realm ? ` · ${realm}` : ''}`;
-    point.setAttribute('aria-label', point.title);
-    point.innerHTML = '<span class="weather-reference-dot" aria-hidden="true"></span>';
-    mapView.appendChild(point);
-  });
-}
-
-async function loadWeatherReferencePoints() {
-  if (!hasSupabaseConfig()) return;
-  try {
-    const rows = await supabaseGet(
-      'weather_reference_coordinates?select=reference_point,realm_name,city,valdara_x,valdara_y'
-    );
-    renderWeatherReferencePoints(rows);
-  } catch (error) {
-    console.warn('Wetterreferenzpunkte konnten nicht geladen werden:', error);
-    renderWeatherReferencePoints([]);
-  }
-}
-
 async function loadWeatherForMap() {
   if (!hasSupabaseConfig()) return;
   try {
@@ -375,7 +329,6 @@ async function loadMapFromSupabase() {
 
     const markers = await supabaseGet(`map_markers?select=id,name,description,marker_type,x,y,is_visible,is_active,location_id,realm_id,locations(location_type)&map_id=eq.${VALDARA_MAP_ID}&is_visible=eq.true&is_active=eq.true&order=name.asc`);
     renderMapMarkers(markers);
-    await loadWeatherReferencePoints();
     setMapStatus(map.image_url ? 'Welt aktiv · Supabase' : 'Welt aktiv · neue Masterkarte',true);
     await loadWeatherForMap();
   } catch(error) {

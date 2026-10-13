@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#07101d">
+<title>Anmelden · VALDARA – Eure Wahl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="login"><div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+<header class="site-header"><a class="brand" href="index.html" aria-label="Valdara Startseite"><img src="assets/valdara-logo.jpg" alt="Valdara Logo"><span>VALDARA<small>EURE WAHL</small></span></a>
+<nav class="main-nav"><a href="index.html">Startseite</a><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="abstimmungen.html">Abstimmungen</a><a href="community.html">Community</a></nav><div class="header-actions"><a class="login-btn" href="login.html">Anmelden</a><button class="menu-btn" id="menuBtn" type="button">☰</button></div></header>
+<main class="account-main"><section class="account-shell"><div class="account-intro"><span class="eyebrow">DEIN PLATZ IN VALDARA</span><h1>Die Geschichte wartet auf euch.</h1><p>Meldet euch an oder erstellt euer Konto, um euren persönlichen Bereich zu betreten und Teil von Valdara zu werden.</p><div class="account-seal">✧<small>VALDARA · EURE WAHL</small></div></div>
+<div class="account-panel"><div class="account-tabs" role="tablist"><button type="button" class="account-tab active" data-auth-mode="login">Anmelden</button><button type="button" class="account-tab" data-auth-mode="signup">Konto erstellen</button></div>
+<form id="authForm" class="account-form"><label for="authDisplayName" id="displayNameLabel" hidden>Anzeigename</label><input id="authDisplayName" name="display_name" type="text" autocomplete="nickname" placeholder="Anzeigename" hidden>
+<label for="authEmail">E-Mail-Adresse</label><input id="authEmail" name="email" type="email" autocomplete="email" placeholder="name@beispiel.de" required>
+<label for="authPassword">Passwort</label><input id="authPassword" name="password" type="password" autocomplete="current-password" minlength="8" placeholder="Mindestens 8 Zeichen" required>
+<button id="authSubmit" class="glow-btn account-submit" type="submit">Anmelden <span>→</span></button><button id="forgotPassword" class="account-text-button" type="button">Passwort vergessen?</button><p id="authMessage" class="account-message" role="status" aria-live="polite"></p><p class="account-privacy">Deine Zugangsdaten werden von Supabase Auth verarbeitet. Dein Passwort wird nicht in der Valdara-Profiltabelle gespeichert.</p></form></div></section></main>
+<footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="community.html">Community</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p></footer>
+<script src="supabase-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="auth.js"></script><script src="ki-chat-widget.js"></script></body></html>
