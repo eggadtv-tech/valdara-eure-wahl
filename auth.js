@@ -89,32 +89,33 @@
       sel.addEventListener('change',applyPeopleTheme);$('#savePeople').addEventListener('click',openPeopleConfirm);$('#peopleConfirmClose').addEventListener('click',closePeopleConfirm);$('#peopleConfirmCancel').addEventListener('click',closePeopleConfirm);confirmModal.addEventListener('click',ev=>{if(ev.target===confirmModal)closePeopleConfirm();});document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!confirmModal.hidden)closePeopleConfirm();});
       $('#peopleConfirmAccept').addEventListener('click',async()=>{if(!pendingPeopleId)return;const btn=$('#peopleConfirmAccept');btn.disabled=true;message($('#peopleConfirmMessage'),'Deine Auswahl wird gespeichert …');try{const {error}=await client.from('profiles').update({people_id:pendingPeopleId,updated_at:new Date().toISOString()}).eq('id',user.id);if(error)throw error;const chosen=people.find(p=>p.id===pendingPeopleId);if(chosen)applySitePeopleTheme(chosen.name);message($('#peopleMessage'),'Deine Auswahl wurde gespeichert.','success');closePeopleConfirm();location.reload();}catch(error){message($('#peopleConfirmMessage'),friendly(error),'error');}finally{btn.disabled=false;}});
       const avatarBox=$('#avatarChoices');
-      const filtered=variants.filter(v=>profile.people_id&&v.people_id===profile.people_id);
-      let character=null;
+      const filtered=variants.filter(v=>Boolean(profile.people_id)&&v.people_id===profile.people_id);
       const characterRes=await client.from('characters').select('id,user_id,people_id,avatar_variant_id,display_name').eq('user_id',user.id).maybeSingle();
-      if(characterRes.error){console.warn('Charakter konnte nicht geladen werden:',characterRes.error);}
-      else character=characterRes.data;
-      if(variantsRes.error){avatarBox.innerHTML='<p class="member-muted">Avatar-Varianten konnten nicht geladen werden.</p>';}
-      else if(!profile.people_id){avatarBox.innerHTML='<p class="member-muted">Wähle zuerst dein Volk aus. Danach werden die passenden Erscheinungsbilder angezeigt.</p>';}
-      else if(!filtered.length){avatarBox.innerHTML='<p class="member-muted">Für dieses Volk sind noch keine aktiven Avatar-Varianten hinterlegt.</p>';}
-      else{
-        avatarBox.innerHTML=filtered.map(v=>`<button class="avatar-choice${character?.avatar_variant_id===v.id?' is-selected':''}" type="button" data-avatar-id="${esc(v.id)}" title="${esc(v.description||v.name)}" aria-pressed="${character?.avatar_variant_id===v.id?'true':'false'}">${v.image_url?`<img src="${esc(v.image_url)}" alt="">`:'<span class="avatar-placeholder">✧</span>'}<span>${esc(v.name)}</span>${character?.avatar_variant_id===v.id?'<small>Ausgewählt</small>':''}</button>`).join('');
-        avatarBox.querySelectorAll('[data-avatar-id]').forEach(btn=>btn.addEventListener('click',async()=>{
-          const variant=filtered.find(v=>v.id===btn.dataset.avatarId);if(!variant)return;
-          if(!profile.people_id||variant.people_id!==profile.people_id){message($('#avatarMessage'),'Diese Variante gehört nicht zu deinem ausgewählten Volk.','error');return;}
-          avatarBox.querySelectorAll('button').forEach(b=>b.disabled=true);message($('#avatarMessage'),'Deine Avatar-Auswahl wird gespeichert …');
-          try{
-            const payload={user_id:user.id,people_id:profile.people_id,avatar_variant_id:variant.id,display_name:profile.display_name||user.email?.split('@')[0]||'Reisende:r'};
-            let saveRes;
-            if(character){saveRes=await client.from('characters').update({people_id:payload.people_id,avatar_variant_id:payload.avatar_variant_id,display_name:payload.display_name,updated_at:new Date().toISOString()}).eq('user_id',user.id).select('id,user_id,people_id,avatar_variant_id,display_name').single();}
-            else{saveRes=await client.from('characters').insert({...payload,id:crypto.randomUUID()}).select('id,user_id,people_id,avatar_variant_id,display_name').single();}
-            if(saveRes.error)throw saveRes.error;
-            character=saveRes.data;
-            avatarBox.querySelectorAll('[data-avatar-id]').forEach(b=>{const selected=b.dataset.avatarId===variant.id;b.classList.toggle('is-selected',selected);b.setAttribute('aria-pressed',String(selected));const old=b.querySelector('small');if(old)old.remove();if(selected){const tag=document.createElement('small');tag.textContent='Ausgewählt';b.appendChild(tag);}});
-            message($('#avatarMessage'),'Dein Erscheinungsbild wurde gespeichert.','success');
-          }catch(error){console.error('Avatar konnte nicht gespeichert werden:',error);message($('#avatarMessage'),error?.code==='42501'?'Die Datenbank erlaubt das Speichern noch nicht. Bitte zuerst die RLS-Regeln aus der Datei AVATAR_SETUP_v36.sql anwenden.':friendly(error),'error');}
-          finally{avatarBox.querySelectorAll('button').forEach(b=>b.disabled=false);}
+      let currentCharacter=characterRes.error?null:characterRes.data;
+      if(variantsRes.error){avatarBox.innerHTML='<p class="member-muted">Avatar-Varianten konnten nicht geladen werden. Bitte lade die Seite neu.</p>';message($('#avatarMessage'),friendly(variantsRes.error),'error');}
+      else if(!profile.people_id){avatarBox.innerHTML='<p class="member-muted">Wähle zuerst dein Volk aus. Danach erscheinen die passenden Avatar-Varianten.</p>';}
+      else if(!filtered.length){avatarBox.innerHTML='<p class="member-muted">Für dein Volk sind noch keine aktiven Avatar-Varianten hinterlegt.</p>';}
+      else {
+        if(currentCharacter?.people_id!==profile.people_id) currentCharacter=null;
+        avatarBox.innerHTML=filtered.map(v=>`<button class="avatar-choice${currentCharacter?.avatar_variant_id===v.id?' selected':''}" type="button" data-avatar-id="${esc(v.id)}" aria-pressed="${currentCharacter?.avatar_variant_id===v.id?'true':'false'}" title="${esc(v.description||v.name)}">${v.image_url?`<img src="${esc(v.image_url)}" alt="" loading="lazy">`:'<span class="avatar-placeholder">✧</span>'}<span>${esc(v.name)}</span>${currentCharacter?.avatar_variant_id===v.id?'<small class="avatar-selected-label">Ausgewählt</small>':''}</button>`).join('');
+        avatarBox.querySelectorAll('[data-avatar-id]').forEach(button=>button.addEventListener('click',async()=>{
+          const variant=filtered.find(v=>v.id===button.dataset.avatarId);if(!variant)return;
+          if(button.dataset.saving==='true')return;
+          avatarBox.querySelectorAll('button').forEach(b=>b.disabled=true);button.dataset.saving='true';message($('#avatarMessage'),'Avatar wird gespeichert …');
+          try {
+            const payload={user_id:user.id,people_id:profile.people_id,avatar_variant_id:variant.id,display_name:(profile.display_name||user.email?.split('@')[0]||'Reisende:r').slice(0,40),updated_at:new Date().toISOString()};
+            let saveResult;
+            if(currentCharacter?.id){saveResult=await client.from('characters').update({people_id:payload.people_id,avatar_variant_id:payload.avatar_variant_id,updated_at:payload.updated_at}).eq('user_id',user.id).select('id,user_id,people_id,avatar_variant_id,display_name').single();}
+            else {saveResult=await client.from('characters').upsert(payload,{onConflict:'user_id'}).select('id,user_id,people_id,avatar_variant_id,display_name').single();}
+            if(saveResult.error)throw saveResult.error;
+            currentCharacter=saveResult.data;
+            avatarBox.querySelectorAll('[data-avatar-id]').forEach(b=>{const selected=b.dataset.avatarId===variant.id;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));const old=b.querySelector('.avatar-selected-label');if(old)old.remove();if(selected){const label=document.createElement('small');label.className='avatar-selected-label';label.textContent='Ausgewählt';b.appendChild(label);}});
+            message($('#avatarMessage'),`Dein Avatar „${variant.name}“ wurde gespeichert.`,'success');
+          } catch(error) {console.error('Avatar konnte nicht gespeichert werden:',error);message($('#avatarMessage'),friendly(error),'error');}
+          finally {avatarBox.querySelectorAll('button').forEach(b=>b.disabled=false);delete button.dataset.saving;}
         }));
+        if(characterRes.error) message($('#avatarMessage'),'Deine gespeicherte Avatar-Auswahl konnte nicht geladen werden. Eine neue Auswahl ist trotzdem möglich.','error');
+        else if(currentCharacter) message($('#avatarMessage'),'Dein aktuell gespeicherter Avatar ist markiert.');
       }
       const groupIds=(groupRes.data||[]).map(x=>x.group_id);const areaIds=(areaRes.data||[]).map(x=>x.game_area_id);let rows=[];
       if(groupIds.length){const r=await client.from('groups').select('id,name,description').in('id',groupIds);if(!r.error)rows.push(...(r.data||[]).map(x=>({...x,kind:'Gruppe'})));}
