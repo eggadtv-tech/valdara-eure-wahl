@@ -348,3 +348,19 @@ body[data-page="member"][data-member-view="friends"] #memberInventory,
 body[data-page="member"][data-member-view="inventory"] #memberMessages,
 body[data-page="member"][data-member-view="inventory"] #memberFriends { display:none !important; }
 body[data-page="member"] .member-side-link.active { color:var(--gold2); border-color:var(--line); background:rgba(215,173,88,.08); }
+
+
+/* Datenschutzerklärung: lesbarer Rechtstext im bestehenden Valdara-Design */
+.legal-page-main{min-height:65vh;padding-top:68px}
+.legal-intro{padding-bottom:28px}
+.legal-intro .section-heading h1{font:600 clamp(34px,5vw,54px)/1.15 Cinzel,serif;color:#f1f3f7;margin:14px 0}
+.legal-content{max-width:980px;margin:0 auto;padding-top:20px;padding-bottom:90px;color:#c1cad6;font-size:14px;line-height:1.85}
+.legal-content>p{max-width:860px}
+.legal-content .legal-section{padding:22px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.legal-content .legal-section h2{font:600 22px/1.35 Cinzel,serif;color:#f0d49a;margin:0 0 14px}
+.legal-content .legal-section p{margin:0 0 12px}
+.legal-content .legal-section p:last-child{margin-bottom:0}
+.legal-last-updated{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#d7ad58;margin-bottom:18px}
+.legal-intro-note{padding:16px 18px;border:1px solid rgba(215,173,88,.28);background:rgba(215,173,88,.06);color:#d5c6a7;font-size:12px;line-height:1.7;margin-bottom:24px}
+.legal-content a{color:#f0d49a;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:760px){.legal-page-main{padding-top:68px}.legal-content{padding-left:20px;padding-right:20px;font-size:13px}.legal-content .legal-section h2{font-size:19px}.legal-intro-note{padding:13px}}
