@@ -8,12 +8,12 @@
   const friendly = (e) => ({'Invalid login credentials':'E-Mail-Adresse oder Passwort ist nicht korrekt.','User already registered':'Für diese E-Mail-Adresse existiert bereits ein Konto.','Password should be at least 6 characters':'Das Passwort ist zu kurz.'}[e?.message] || e?.message || 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.');
   async function updateAccountLink(session) { const link=$('#accountLink'); if(link){link.href=session?'mein-bereich.html':'login.html';link.textContent=session?'Mein Bereich':'Anmelden';} const profileNav=$('#profileNavLink'); if(profileNav) profileNav.hidden=!session; document.querySelectorAll('.login-btn').forEach(el=>{if(el.id==='accountLink')return;el.textContent=session?'Mein Bereich':'Anmelden';el.onclick=null;el.addEventListener('click',()=>location.href=session?'mein-bereich.html':'login.html');}); }
   async function ensureProfile(user, fallbackName) {
-    const {data, error}=await client.from('profiles').select('id,display_name,role,people_id,people_changed_at,is_active').eq('id',user.id).maybeSingle();
+    const {data, error}=await client.from('profiles').select('id,display_name,role,people_id,people_changed_at,is_active,birth_date,age_verified_at').eq('id',user.id).maybeSingle();
     if(error) throw error;
     if(data) return data;
     // Backup if the database trigger has not been installed yet. Uses the user's own session and existing RLS.
     const display=(fallbackName || user.user_metadata?.display_name || user.email?.split('@')[0] || 'Reisende:r').trim().slice(0,40);
-    const {data:created,error:insertError}=await client.from('profiles').insert({id:user.id,display_name:display}).select('id,display_name,role,people_id,people_changed_at,is_active').single();
+    const {data:created,error:insertError}=await client.from('profiles').insert({id:user.id,display_name:display,birth_date:user.user_metadata?.birth_date||null,age_verified_at:user.user_metadata?.birth_date?new Date().toISOString():null}).select('id,display_name,role,people_id,people_changed_at,is_active').single();
     if(insertError) throw insertError;
     return created;
   }
@@ -51,16 +51,22 @@
     const form=$('#authForm'); if(!form) return;
     if(!client){message($('#authMessage'),'Supabase ist nicht konfiguriert. Bitte Konfiguration prüfen.','error');return;}
     let mode='login';
-    const display=$('#authDisplayName'), displayLabel=$('#displayNameLabel'), pass=$('#authPassword'), submit=$('#authSubmit'), forgot=$('#forgotPassword');
-    document.querySelectorAll('[data-auth-mode]').forEach(btn=>btn.addEventListener('click',()=>{mode=btn.dataset.authMode;document.querySelectorAll('[data-auth-mode]').forEach(b=>b.classList.toggle('active',b===btn));const signup=mode==='signup';display.hidden=!signup;displayLabel.hidden=!signup;display.required=signup;pass.autocomplete=signup?'new-password':'current-password';submit.innerHTML=signup?'Konto erstellen <span>→</span>':'Anmelden <span>→</span>';forgot.hidden=signup;message($('#authMessage'),'');}));
+    const display=$('#authDisplayName'), displayLabel=$('#displayNameLabel'), birth=$('#authBirthDate'), birthLabel=$('#birthDateLabel'), birthHint=$('#birthDateHint'), pass=$('#authPassword'), submit=$('#authSubmit'), forgot=$('#forgotPassword');
+    const today=new Date(); birth.max=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+    function ageOn(dateString){if(!dateString)return -1;const d=new Date(dateString+'T00:00:00');if(Number.isNaN(d.getTime()))return -1;let age=today.getFullYear()-d.getFullYear();if(today.getMonth()<d.getMonth()||(today.getMonth()===d.getMonth()&&today.getDate()<d.getDate()))age--;return age;}
+    function showMode(nextMode){mode=nextMode;document.querySelectorAll('[data-auth-mode]').forEach(b=>b.classList.toggle('active',b.dataset.authMode===mode));const signup=mode==='signup';display.hidden=!signup;displayLabel.hidden=!signup;display.required=signup;birth.hidden=!signup;birthLabel.hidden=!signup;birthHint.hidden=!signup;birth.required=signup;pass.autocomplete=signup?'new-password':'current-password';submit.innerHTML=signup?'Konto erstellen <span>→</span>':'Anmelden <span>→</span>';forgot.hidden=signup;message($('#authMessage'),'');}
+    
+    document.querySelectorAll('[data-auth-mode]').forEach(btn=>btn.addEventListener('click',()=>showMode(btn.dataset.authMode)));
+    showMode('login');
     form.addEventListener('submit',async ev=>{ev.preventDefault();message($('#authMessage'),'Bitte einen Moment …');submit.disabled=true;
       try {const email=$('#authEmail').value.trim(),password=pass.value;
         if(mode==='signup'){
           const displayName=display.value.trim(); if(!displayName) throw new Error('Bitte gib einen Anzeigenamen ein.');
-          const {data,error}=await client.auth.signUp({email,password,options:{data:{display_name:displayName},emailRedirectTo:location.origin+location.pathname.replace(/login\.html$/,'mein-bereich.html')}}); if(error)throw error;
-          if(data.session){try{await ensureProfile(data.user,displayName);}catch(e){console.warn('Profil wird beim ersten Login vervollständigt:',e);} location.href='mein-bereich.html';return;}
+          const birthDate=birth.value; const age=ageOn(birthDate); if(!birthDate||age<0) throw new Error('Bitte gib ein gültiges Geburtsdatum ein.'); if(age<14) throw new Error('Eine Registrierung ist erst ab 14 Jahren möglich.');
+          const {data,error}=await client.auth.signUp({email,password,options:{data:{display_name:displayName,birth_date:birthDate},emailRedirectTo:location.origin+location.pathname.replace(/login\.html$/,'mein-bereich.html')}}); if(error)throw error;
+          if(data.session){try{await ensureProfile(data.user,displayName);const {error:ageError}=await client.from('profiles').update({birth_date:birthDate,age_verified_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',data.user.id);if(ageError)throw ageError;}catch(e){console.warn('Profil wird beim ersten Login vervollständigt:',e);} location.href='mein-bereich.html';return;}
           message($('#authMessage'),'Konto angelegt. Bitte bestätige deine E-Mail-Adresse über den Link in deinem Postfach. Danach kannst du dich anmelden.','success');
-        } else {const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;try{await ensureProfile(data.user);}catch(e){console.error(e);message($('#authMessage'),'Du bist angemeldet, aber dein Profil konnte noch nicht geladen werden. Bitte prüfe die Profil-RLS-Regeln.','error');return;}location.href='mein-bereich.html';return;}
+        } else {const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;try{const prof=await ensureProfile(data.user);if(data.user.user_metadata?.birth_date&&!prof.birth_date){const {error:ageError}=await client.from('profiles').update({birth_date:data.user.user_metadata.birth_date,age_verified_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',data.user.id);if(ageError)console.warn('Geburtsdatum konnte noch nicht ins Profil übertragen werden:',ageError);}}catch(e){console.error(e);message($('#authMessage'),'Du bist angemeldet, aber dein Profil konnte noch nicht geladen werden. Bitte prüfe die Profil-RLS-Regeln.','error');return;}location.href='mein-bereich.html';return;}
       } catch(e){message($('#authMessage'),friendly(e),'error');} finally{submit.disabled=false;}
     });
     forgot.addEventListener('click',async()=>{const email=$('#authEmail').value.trim();if(!email){message($('#authMessage'),'Trage zuerst deine E-Mail-Adresse ein.');return;}message($('#authMessage'),'Passwort-Link wird angefordert …');const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});message($('#authMessage'),error?friendly(error):'Falls ein Konto zu dieser Adresse existiert, erhältst du eine E-Mail zum Zurücksetzen des Passworts.',error?'error':'success');});
