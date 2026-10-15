@@ -364,3 +364,10 @@ body[data-page="member"] .member-side-link.active { color:var(--gold2); border-c
 .legal-intro-note{padding:16px 18px;border:1px solid rgba(215,173,88,.28);background:rgba(215,173,88,.06);color:#d5c6a7;font-size:12px;line-height:1.7;margin-bottom:24px}
 .legal-content a{color:#f0d49a;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:760px){.legal-page-main{padding-top:68px}.legal-content{padding-left:20px;padding-right:20px;font-size:13px}.legal-content .legal-section h2{font-size:19px}.legal-intro-note{padding:13px}}
+
+/* Altersabfrage für bestehende Konten: Geburtsdatum bleibt privat. */
+.age-confirm-backdrop{z-index:10050}
+.age-confirm-dialog{max-width:520px}
+.age-confirm-dialog .account-form{margin-top:22px}
+.age-confirm-dialog input[type=date]{width:100%;box-sizing:border-box}
+.age-confirm-dialog .account-privacy{display:block;margin:10px 0 18px;color:#b7c1ce;font-size:12px;line-height:1.6}

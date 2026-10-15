@@ -76,6 +76,24 @@
     const loading=$('#memberLoading');
     try {const {data:{session},error:sessionError}=await client.auth.getSession();if(sessionError)throw sessionError;if(!session){location.href='login.html?return=mein-bereich.html';return;}await updateAccountLink(session);
       const user=session.user;let profile=await ensureProfile(user);if(profile.is_active===false){await client.auth.signOut();throw new Error('Dieses Konto ist deaktiviert. Bitte wende dich an die Administration.');}
+      // Bestehende Konten ohne Geburtsdatum müssen es beim nächsten Besuch ergänzen.
+      if(!profile.birth_date){
+        const ageModal=$('#birthDateModal'), ageInput=$('#existingBirthDate'), ageForm=$('#existingBirthDateForm'), ageSave=$('#saveExistingBirthDate');
+        if(ageModal&&ageInput&&ageForm){
+          const now=new Date();ageInput.max=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+          ageModal.hidden=false;ageModal.setAttribute('aria-hidden','false');document.body.classList.add('people-confirm-open');
+          $('#memberContent').hidden=true;loading.hidden=true;
+          ageForm.addEventListener('submit',async ev=>{ev.preventDefault();
+            const val=ageInput.value;const dob=new Date(val+'T00:00:00');let age=now.getFullYear()-dob.getFullYear();if(now.getMonth()<dob.getMonth()||(now.getMonth()===dob.getMonth()&&now.getDate()<dob.getDate()))age--;
+            if(!val||Number.isNaN(dob.getTime())||dob>now){message($('#existingBirthDateMessage'),'Bitte gib ein gültiges Geburtsdatum ein.','error');return;}
+            if(age<14){message($('#existingBirthDateMessage'),'Du musst mindestens 14 Jahre alt sein, um Valdara zu nutzen.','error');return;}
+            ageSave.disabled=true;message($('#existingBirthDateMessage'),'Geburtsdatum wird gespeichert …');
+            try{const {data:updated,error:updateError}=await client.from('profiles').update({birth_date:val,age_verified_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',user.id).select('id,birth_date,age_verified_at').single();if(updateError)throw updateError;if(!updated?.birth_date)throw new Error('Das Geburtsdatum konnte nicht bestätigt werden.');ageModal.hidden=true;ageModal.setAttribute('aria-hidden','true');document.body.classList.remove('people-confirm-open');location.reload();}
+            catch(err){console.error('Geburtsdatum konnte nicht gespeichert werden:',err);message($('#existingBirthDateMessage'),'Speichern fehlgeschlagen. Bitte versuche es erneut.','error');ageSave.disabled=false;}
+          });
+          return;
+        }
+      }
       $('#memberGreeting').textContent=profile.display_name||user.email?.split('@')[0]||'Reisende:r';
       if(profile.people_id){const savedPeople=await client.from('peoples').select('name').eq('id',profile.people_id).maybeSingle();if(!savedPeople.error&&savedPeople.data?.name)applySitePeopleTheme(savedPeople.data.name);}$('#profileDisplayName').value=profile.display_name||'';$('#profileEmail').value=user.email||'';
       const [peopleRes,variantsRes,groupRes,areaRes]=await Promise.all([
