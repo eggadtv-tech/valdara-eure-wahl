@@ -20,7 +20,17 @@
     <a id="profileNavLink" href="mein-bereich.html" hidden>Profil</a>
   </nav>
   <div class="header-actions"><a class="login-btn" id="accountLink" href="login.html">Anmelden</a><button class="menu-btn" id="menuBtn" aria-label="Menü öffnen">☰</button></div>
-</header>
+<div class="member-menu-wrap" id="memberMenuWrap">
+<button class="member-menu-toggle" id="memberMenuBtn" type="button" aria-expanded="false" aria-controls="memberMenuDropdown" aria-label="Mein Bereich öffnen"><span class="burger-lines" aria-hidden="true"><i></i><i></i><i></i></span><span class="member-menu-toggle-label">Mein Bereich</span></button>
+<div class="member-menu-dropdown" id="memberMenuDropdown" hidden>
+<div class="member-menu-heading">MEIN BEREICH</div>
+<a href="mein-bereich.html">Übersicht</a>
+<a href="mein-bereich.html?view=character">Charakter</a>
+<a href="mein-bereich.html?view=messages">Nachrichten</a>
+<a href="mein-bereich.html?view=friends">Freunde</a>
+<a href="mein-bereich.html?view=inventory">Inventar</a>
+<a href="community.html">Forum</a>
+</div></div></header>
 <main class="legal-page-main">
   <section class="section page-intro legal-intro"><div class="section-heading centered"><span class="eyebrow">VALDARA · RECHTLICHES</span><h1>Datenschutzerklärung</h1><p>Hier erfahrt ihr, welche personenbezogenen Daten bei der Nutzung von Valdara verarbeitet werden.</p></div></section>
   <section class="section legal-content"><div class="legal-last-updated">Stand: 14. Oktober 2026</div>
@@ -49,5 +59,26 @@
 <footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="index.html">Startseite</a><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="abstimmungen.html">Abstimmungen</a><a href="community.html">Community</a><a href="shop.html">Shop</a><a href="datenschutz.html" aria-current="page">Datenschutz</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p><div class="footer-bottom"><span>© 2026 VALDARA – EURE WAHL</span><span>Die Welt wächst mit euch.</span></div></footer>
 <script src="supabase-config.js"></script>
 <script src="app.js"></script>
+<script>
+(() => {
+  const wrap = document.getElementById('memberMenuWrap');
+  const button = document.getElementById('memberMenuBtn');
+  const dropdown = document.getElementById('memberMenuDropdown');
+  if (!wrap || !button || !dropdown) return;
+  const closeMenu = () => { dropdown.hidden = true; button.setAttribute('aria-expanded', 'false'); };
+  button.addEventListener('click', () => {
+    const open = dropdown.hidden;
+    dropdown.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', event => { if (!wrap.contains(event.target)) closeMenu(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
+  const current = new URLSearchParams(location.search).get('view');
+  dropdown.querySelectorAll('a').forEach(link => {
+    const url = new URL(link.href, location.href);
+    if (url.pathname.endsWith('/mein-bereich.html') && (url.searchParams.get('view') || '') === (current || '')) link.classList.add('current');
+  });
+})();
+</script>
 </body>
 </html>

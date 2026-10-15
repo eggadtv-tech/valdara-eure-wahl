@@ -8,7 +8,17 @@
 </head>
 <body data-page="login"><div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
 <header class="site-header"><a class="brand" href="index.html" aria-label="Valdara Startseite"><img src="assets/valdara-logo.jpg" alt="Valdara Logo"><span>VALDARA<small>EURE WAHL</small></span></a>
-<nav class="main-nav"><a href="index.html">Startseite</a><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="abstimmungen.html">Abstimmungen</a><a href="community.html">Community</a><a id="profileNavLink" href="mein-bereich.html" hidden>Profil</a></nav><div class="header-actions"><a class="login-btn" href="login.html">Anmelden</a><button class="menu-btn" id="menuBtn" type="button">☰</button></div></header>
+<nav class="main-nav"><a href="index.html">Startseite</a><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="abstimmungen.html">Abstimmungen</a><a href="community.html">Community</a><a id="profileNavLink" href="mein-bereich.html" hidden>Profil</a></nav><div class="header-actions"><a class="login-btn" href="login.html">Anmelden</a><button class="menu-btn" id="menuBtn" type="button">☰</button><div class="member-menu-wrap" id="memberMenuWrap">
+<button class="member-menu-toggle" id="memberMenuBtn" type="button" aria-expanded="false" aria-controls="memberMenuDropdown" aria-label="Mein Bereich öffnen"><span class="burger-lines" aria-hidden="true"><i></i><i></i><i></i></span><span class="member-menu-toggle-label">Mein Bereich</span></button>
+<div class="member-menu-dropdown" id="memberMenuDropdown" hidden>
+<div class="member-menu-heading">MEIN BEREICH</div>
+<a href="mein-bereich.html">Übersicht</a>
+<a href="mein-bereich.html?view=character">Charakter</a>
+<a href="mein-bereich.html?view=messages">Nachrichten</a>
+<a href="mein-bereich.html?view=friends">Freunde</a>
+<a href="mein-bereich.html?view=inventory">Inventar</a>
+<a href="community.html">Forum</a>
+</div></div></div></header>
 <main class="account-main"><section class="account-shell"><div class="account-intro"><span class="eyebrow">DEIN PLATZ IN VALDARA</span><h1>Die Geschichte wartet auf euch.</h1><p>Meldet euch an oder erstellt euer Konto, um euren persönlichen Bereich zu betreten und Teil von Valdara zu werden.</p><div class="account-seal">✧<small>VALDARA · EURE WAHL</small></div></div>
 <div class="account-panel"><div class="account-tabs" role="tablist"><button type="button" class="account-tab active" data-auth-mode="login">Anmelden</button><button type="button" class="account-tab" data-auth-mode="signup">Konto erstellen</button></div>
 <form id="authForm" class="account-form"><label for="authDisplayName" id="displayNameLabel" hidden>Anzeigename</label><input id="authDisplayName" name="display_name" type="text" autocomplete="nickname" placeholder="Anzeigename" hidden>
@@ -17,4 +27,25 @@
 <label for="authPassword">Passwort</label><input id="authPassword" name="password" type="password" autocomplete="current-password" minlength="8" placeholder="Mindestens 8 Zeichen" required>
 <button id="authSubmit" class="glow-btn account-submit" type="submit">Anmelden <span>→</span></button><button id="forgotPassword" class="account-text-button" type="button">Passwort vergessen?</button><p id="authMessage" class="account-message" role="status" aria-live="polite"></p><p class="account-privacy">Deine Zugangsdaten werden von Supabase Auth verarbeitet. Dein Passwort wird nicht in der Valdara-Profiltabelle gespeichert.</p></form></div></section></main>
 <footer class="footer"><div class="footer-brand"><span>VALDARA</span><small>EURE WAHL</small></div><div class="footer-links"><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="community.html">Community</a><a href="datenschutz.html">Datenschutz</a></div><p>Eine lebendige Fantasy-Welt. Eure Entscheidungen. Eure Geschichte.</p></footer>
-<script src="supabase-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="auth.js"></script><script src="ki-chat-widget.js"></script><script src="private-chat-widget.js"></script></body></html>
+<script src="supabase-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="auth.js"></script><script src="ki-chat-widget.js"></script><script src="private-chat-widget.js"></script><script>
+(() => {
+  const wrap = document.getElementById('memberMenuWrap');
+  const button = document.getElementById('memberMenuBtn');
+  const dropdown = document.getElementById('memberMenuDropdown');
+  if (!wrap || !button || !dropdown) return;
+  const closeMenu = () => { dropdown.hidden = true; button.setAttribute('aria-expanded', 'false'); };
+  button.addEventListener('click', () => {
+    const open = dropdown.hidden;
+    dropdown.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', event => { if (!wrap.contains(event.target)) closeMenu(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
+  const current = new URLSearchParams(location.search).get('view');
+  dropdown.querySelectorAll('a').forEach(link => {
+    const url = new URL(link.href, location.href);
+    if (url.pathname.endsWith('/mein-bereich.html') && (url.searchParams.get('view') || '') === (current || '')) link.classList.add('current');
+  });
+})();
+</script>
+</body></html>

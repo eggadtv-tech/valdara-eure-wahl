@@ -30,7 +30,17 @@
     <a data-page="start" href="index.html">Startseite</a><a data-page="welt" href="welt.html">Welt</a><a data-page="voelker" href="voelker.html">Völker</a><a data-page="geschichten" href="geschichten.html">Geschichten</a><a data-page="entscheidungen" href="abstimmungen.html">Abstimmungen</a><a data-page="community" href="community.html">Community</a>
   <a id="profileNavLink" href="mein-bereich.html" hidden>Profil</a></nav>
   <div class="header-actions"><a class="login-btn" href="index.html">Zur Startseite</a><button class="menu-btn" id="menuBtn" type="button" aria-label="Menü öffnen" aria-expanded="false">☰</button></div>
-</header>
+<div class="member-menu-wrap" id="memberMenuWrap">
+<button class="member-menu-toggle" id="memberMenuBtn" type="button" aria-expanded="false" aria-controls="memberMenuDropdown" aria-label="Mein Bereich öffnen"><span class="burger-lines" aria-hidden="true"><i></i><i></i><i></i></span><span class="member-menu-toggle-label">Mein Bereich</span></button>
+<div class="member-menu-dropdown" id="memberMenuDropdown" hidden>
+<div class="member-menu-heading">MEIN BEREICH</div>
+<a href="mein-bereich.html">Übersicht</a>
+<a href="mein-bereich.html?view=character">Charakter</a>
+<a href="mein-bereich.html?view=messages">Nachrichten</a>
+<a href="mein-bereich.html?view=friends">Freunde</a>
+<a href="mein-bereich.html?view=inventory">Inventar</a>
+<a href="community.html">Forum</a>
+</div></div></header>
 <main class="assistant-main">
   <div class="assistant-heading"><span class="eyebrow">FRAGT DIE WELT</span><h1>Valdaras KI-Assistent</h1><p>Stellt Fragen zu Valdara, den sechs Völkern, den Reichen und bekannten Orten. Der Assistent nutzt die angebundene Wissensbasis, soweit Daten verfügbar sind.</p></div>
   <section class="assistant-frame-shell" aria-label="Valdara Chat-Assistent">
@@ -46,5 +56,26 @@ menuButton?.addEventListener('click',()=>{const open=navigation?.classList.toggl
 navigation?.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{navigation.classList.remove('open');menuButton?.setAttribute('aria-expanded','false');}));
 </script>
 <script src="ki-chat-widget.js"></script><script src="private-chat-widget.js"></script>
+<script>
+(() => {
+  const wrap = document.getElementById('memberMenuWrap');
+  const button = document.getElementById('memberMenuBtn');
+  const dropdown = document.getElementById('memberMenuDropdown');
+  if (!wrap || !button || !dropdown) return;
+  const closeMenu = () => { dropdown.hidden = true; button.setAttribute('aria-expanded', 'false'); };
+  button.addEventListener('click', () => {
+    const open = dropdown.hidden;
+    dropdown.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', event => { if (!wrap.contains(event.target)) closeMenu(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
+  const current = new URLSearchParams(location.search).get('view');
+  dropdown.querySelectorAll('a').forEach(link => {
+    const url = new URL(link.href, location.href);
+    if (url.pathname.endsWith('/mein-bereich.html') && (url.searchParams.get('view') || '') === (current || '')) link.classList.add('current');
+  });
+})();
+</script>
 </body>
 </html>
