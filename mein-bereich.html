@@ -22,6 +22,22 @@
 <article class="member-card character-story-editor"><div class="member-card-heading"><span class="member-icon">✎</span><div><span class="eyebrow">DEIN CHARAKTER</span><h2>Deine Geschichte</h2></div></div><p class="member-muted">Schreibe auf, wer dein Charakter ist. Du kannst die Geschichte später jederzeit erweitern oder ändern.</p><label for="characterStory">Charaktergeschichte</label><textarea id="characterStory" rows="8" maxlength="12000" placeholder="Woher kommt dein Charakter? Was hat er erlebt? Welche Ziele oder Geheimnisse trägt er mit sich?"></textarea><div class="character-story-footer"><small id="storyCount" class="member-muted">0 / 12000 Zeichen</small><button id="saveCharacterStory" class="glow-btn" type="button">Geschichte speichern <span>→</span></button></div><p id="storyMessage" class="account-message" role="status"></p></article>
 <article class="member-card"><div class="member-card-heading"><span class="member-icon">⌘</span><div><span class="eyebrow">DEINE GEMEINSCHAFT</span><h2>Gruppen & Spielbereiche</h2></div></div><p class="member-muted">Hier erscheinen Gruppen und Spielbereiche, denen du beigetreten bist. Diese Übersicht wird mit den vorhandenen Valdara-Daten verbunden.</p><div id="memberGroups" class="member-list"><p class="member-muted">Gruppen und Spielbereiche werden geladen …</p></div></article></section>
 <section class="member-bottom"><div><span class="eyebrow">SICHERHEIT</span><h2>Dein Konto</h2><p>Du kannst dich hier jederzeit sicher abmelden.</p></div><button id="logoutButton" class="account-logout" type="button">Abmelden ↗</button></section></div><p id="memberError" class="account-message" role="alert"></p>
+<section id="messagesWorkspace" class="messages-workspace" aria-label="Nachrichten und Freunde">
+  <aside class="messages-contacts">
+    <div class="messages-search-heading"><span class="eyebrow">DEIN NETZWERK</span><h2>Kontakte</h2></div>
+    <label for="memberFriendSearch">Neue Freunde finden</label>
+    <input id="memberFriendSearch" type="search" minlength="2" placeholder="Namen suchen …" autocomplete="off">
+    <div id="memberFriendSearchResults" class="messages-search-results" aria-live="polite"></div>
+    <div class="messages-friends-heading"><h3>Deine Freunde</h3><span id="memberFriendCount">0</span></div>
+    <div id="memberFriendsList" class="messages-friends-list"><p class="member-muted">Freunde werden geladen …</p></div>
+    <p id="memberMessagesStatus" class="account-message" role="status"></p>
+  </aside>
+  <section class="messages-conversation" aria-label="Chat">
+    <header class="messages-conversation-header"><div><span class="eyebrow">PRIVATE NACHRICHTEN</span><h2 id="memberChatTitle">Wähle einen Freund</h2></div><span id="memberChatSubtitle" class="member-muted">Dein Gespräch erscheint hier.</span></header>
+    <div id="memberChatMessages" class="messages-chat-history"><div class="messages-empty-state"><span>✉</span><h3>Dein nächstes Gespräch beginnt hier.</h3><p>Wähle links einen Freund aus oder suche nach einem neuen Mitglied.</p></div></div>
+    <form id="memberChatForm" class="messages-chat-compose"><textarea id="memberChatText" rows="2" maxlength="4000" placeholder="Nachricht schreiben …" required disabled></textarea><button type="submit" disabled id="memberChatSend">Senden <span>→</span></button></form>
+  </section>
+</section>
 <section class="member-feature-grid" aria-label="Weitere Mitgliederbereiche">
 <article id="memberMessages" class="member-card member-feature-card"><div class="member-card-heading"><span class="member-icon">✉</span><div><span class="eyebrow">DIREKTER KONTAKT</span><h2>Nachrichten</h2></div></div><p class="member-muted">Schreibe anderen Reisenden eine private Nachricht.</p><form id="privateMessageForm" class="account-form"><label for="messageRecipient">Empfänger</label><select id="messageRecipient" required><option value="">Mitglieder werden geladen …</option></select><label for="privateMessageText">Nachricht</label><textarea id="privateMessageText" rows="4" maxlength="4000" required placeholder="Deine Nachricht …"></textarea><button class="glow-btn" type="submit">Nachricht senden <span>→</span></button><p id="privateMessageStatus" class="account-message" role="status"></p></form><div class="member-subsection"><h3>Deine Nachrichten</h3><div id="privateMessageList" class="member-list"><p class="member-muted">Nachrichten werden geladen …</p></div></div></article>
 <article id="memberFriends" class="member-card member-feature-card"><div class="member-card-heading"><span class="member-icon">♧</span><div><span class="eyebrow">DEIN NETZWERK</span><h2>Freunde</h2></div></div><form id="friendRequestForm" class="account-form"><label for="friendRecipient">Freundschaftsanfrage senden</label><select id="friendRecipient" required><option value="">Mitglieder werden geladen …</option></select><button class="glow-btn" type="submit">Anfrage senden <span>→</span></button><p id="friendRequestStatus" class="account-message" role="status"></p></form><div class="member-subsection"><h3>Eingehende Anfragen</h3><div id="friendIncomingList" class="member-list"><p class="member-muted">Anfragen werden geladen …</p></div></div><div class="member-subsection"><h3>Freunde & gesendete Anfragen</h3><div id="friendList" class="member-list"><p class="member-muted">Freunde werden geladen …</p></div></div></article>
@@ -77,4 +93,72 @@
   });
 })();
 </script>
+
+<script>
+(() => {
+  if (new URLSearchParams(location.search).get('view') !== 'messages') return;
+  const $ = id => document.getElementById(id);
+  const client = window.supabase?.createClient && window.VALDARA_SUPABASE_URL && window.VALDARA_SUPABASE_ANON_KEY
+    ? window.supabase.createClient(window.VALDARA_SUPABASE_URL, window.VALDARA_SUPABASE_ANON_KEY) : null;
+  if (!client) { $('memberMessagesStatus').textContent = 'Verbindung zu Supabase konnte nicht hergestellt werden.'; return; }
+  let user = null, friends = [], selected = null, searchTimer = null;
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const status = text => { $('memberMessagesStatus').textContent = text || ''; };
+  const empty = (title, text='') => `<div class="messages-empty-state"><span>✉</span><h3>${esc(title)}</h3>${text?`<p>${esc(text)}</p>`:''}</div>`;
+  async function loadFriends() {
+    const { data, error } = await client.rpc('list_my_friends');
+    if (error) { $('memberFriendsList').innerHTML = `<p class="member-muted">Freunde konnten nicht geladen werden: ${esc(error.message)}</p>`; return; }
+    friends = data || [];
+    $('memberFriendCount').textContent = String(friends.length);
+    $('memberFriendsList').innerHTML = friends.length ? friends.map(f => `<button type="button" class="messages-friend ${selected===f.id?'active':''}" data-friend-id="${esc(f.id)}"><span class="messages-friend-avatar">${esc((f.display_name||'?').slice(0,1).toUpperCase())}</span><span class="messages-friend-name">${esc(f.display_name||'Mitglied')}</span><span class="messages-friend-arrow">›</span></button>`).join('') : '<p class="member-muted">Du hast noch keine bestätigten Freunde.</p>';
+    $('memberFriendsList').querySelectorAll('[data-friend-id]').forEach(btn => btn.addEventListener('click', () => selectFriend(btn.dataset.friendId)));
+    if (selected && !friends.some(f=>f.id===selected)) { selected=null; }
+    if (selected) await loadConversation();
+  }
+  async function selectFriend(id) {
+    selected = id;
+    const friend = friends.find(f=>f.id===id);
+    $('memberChatTitle').textContent = friend?.display_name || 'Privater Chat';
+    $('memberChatSubtitle').textContent = 'Gespräch ist privat';
+    $('memberChatText').disabled = false; $('memberChatSend').disabled = false;
+    $('memberFriendsList').querySelectorAll('[data-friend-id]').forEach(b=>b.classList.toggle('active',b.dataset.friendId===id));
+    await loadConversation();
+  }
+  async function loadConversation() {
+    if (!user || !selected) return;
+    const box=$('memberChatMessages'); box.innerHTML='<p class="member-muted">Nachrichten werden geladen …</p>';
+    const {data,error}=await client.from('private_messages').select('id,sender_id,recipient_id,content,created_at').or(`and(sender_id.eq.${user.id},recipient_id.eq.${selected}),and(sender_id.eq.${selected},recipient_id.eq.${user.id})`).order('created_at',{ascending:true}).limit(100);
+    if(error){box.innerHTML=empty('Nachrichten konnten nicht geladen werden.',error.message);return;}
+    box.innerHTML=data?.length?data.map(m=>`<article class="messages-bubble ${m.sender_id===user.id?'mine':'theirs'}"><p>${esc(m.content)}</p><time>${esc(new Date(m.created_at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))}</time></article>`).join(''):empty('Noch keine Nachrichten.','Schreib den ersten Gruß!');
+    box.scrollTop=box.scrollHeight;
+  }
+  $('memberFriendSearch').addEventListener('input', () => {
+    clearTimeout(searchTimer); const term=$('memberFriendSearch').value.trim(); const box=$('memberFriendSearchResults');
+    if(term.length<2){box.innerHTML='';return;} box.innerHTML='<p class="member-muted">Suche …</p>';
+    searchTimer=setTimeout(async()=>{
+      const {data,error}=await client.rpc('search_friend_candidates',{search_text:term});
+      if(error){box.innerHTML=`<p class="member-muted">Suche nicht verfügbar: ${esc(error.message)}</p>`;return;}
+      const results=(data||[]).filter(x=>!friends.some(f=>f.id===x.id));
+      box.innerHTML=results.length?results.map(x=>`<div class="messages-search-result"><span>${esc(x.display_name)}</span><button type="button" data-add-friend="${esc(x.id)}">Anfrage senden</button></div>`).join(''):'<p class="member-muted">Keine neuen passenden Mitglieder gefunden.</p>';
+      box.querySelectorAll('[data-add-friend]').forEach(btn=>btn.addEventListener('click',async()=>{
+        btn.disabled=true;btn.textContent='Sende …';
+        const {error}=await client.from('friendships').insert({requester_id:user.id,addressee_id:btn.dataset.addFriend,status:'pending'});
+        if(error){btn.disabled=false;btn.textContent='Erneut versuchen';status(error.code==='23505'?'Eine Anfrage besteht bereits.':error.message);return;}
+        btn.textContent='Anfrage gesendet';status('Freundschaftsanfrage wurde gesendet.');
+      }));
+    },250);
+  });
+  $('memberChatForm').addEventListener('submit',async ev=>{
+    ev.preventDefault();const content=$('memberChatText').value.trim();if(!selected||!content)return;
+    const btn=$('memberChatSend');btn.disabled=true;
+    const {error}=await client.from('private_messages').insert({sender_id:user.id,recipient_id:selected,content});
+    if(error){status(error.message);}else{$('memberChatText').value='';status('');await loadConversation();}
+    btn.disabled=false;
+  });
+  (async()=>{const {data,error}=await client.auth.getUser();user=data?.user;if(error||!user){$('memberFriendsList').innerHTML='<p class="member-muted">Bitte melde dich an, um deine Freunde zu sehen.</p>';return;}await loadFriends();})();
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&selected)loadConversation();});
+  setInterval(()=>{if(selected&&!document.hidden)loadConversation();},15000);
+})();
+</script>
+
 </body></html>
