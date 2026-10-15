@@ -14,17 +14,7 @@
     </section>
     <button type="button" class="vpc-launcher" id="vpcLauncher" aria-expanded="false"><span>✉</span><b>Nachrichten</b><i id="vpcUnread" hidden></i></button>`;
   document.body.appendChild(root);
-  // Gemeinsames Dropdown unter „Mein Bereich“ auf allen Seiten.
-  const accountLink=document.getElementById('accountLink');
-  if(accountLink && !document.getElementById('valdara-account-menu')){
-    const wrap=document.createElement('div'); wrap.id='valdara-account-menu'; wrap.className='vam-wrap';
-    accountLink.parentNode.insertBefore(wrap,accountLink); wrap.appendChild(accountLink);
-    const menuButton=document.createElement('button'); menuButton.type='button'; menuButton.className='vam-toggle'; menuButton.setAttribute('aria-label','Mein Bereich öffnen'); menuButton.setAttribute('aria-expanded','false'); menuButton.textContent='⌄'; wrap.appendChild(menuButton);
-    const menu=document.createElement('div'); menu.className='vam-menu'; menu.hidden=true; menu.innerHTML='<a href="mein-bereich.html">Profil & Charakter</a><a href="mein-bereich.html?view=friends">Freunde</a><button type="button" data-open-vpc>Nachrichten öffnen</button><a href="mein-bereich.html?view=inventory">Inventar</a><a href="community.html">Forum</a>'; wrap.appendChild(menu);
-    menuButton.addEventListener('click',()=>{menu.hidden=!menu.hidden;menuButton.setAttribute('aria-expanded',String(!menu.hidden));});
-    menu.querySelector('[data-open-vpc]').addEventListener('click',()=>{menu.hidden=true;const launch=document.getElementById('vpcLauncher');if(launch)launch.click();});
-    document.addEventListener('click',ev=>{if(!wrap.contains(ev.target)){menu.hidden=true;menuButton.setAttribute('aria-expanded','false');}});
-  }
+  // Navigation wird ausschließlich über das feste Burger-Menü im Seitenheader gesteuert.
   const $ = id => root.querySelector('#'+id);
   const panel=$('vpcPanel'), launcher=$('vpcLauncher');
   const stateKey='valdara.privateChat.v2'; let currentUser=null, selected=null, friends=[], nameById=new Map(), pollTimer=null;
