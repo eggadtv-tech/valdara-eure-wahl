@@ -10,7 +10,7 @@
 <a href="mein-bereich.html?view=messages">Nachrichten</a>
 <a href="mein-bereich.html?view=friends">Freunde</a>
 <a href="mein-bereich.html?view=inventory">Inventar</a>
-<a href="forum.html">Forum</a><button id="globalLogoutButton" class="member-menu-logout" type="button">Abmelden ↗</button>
+<a href="forum.html">Forum</a><a href="forum.html?moderation=reports" id="moderationMenuLink" hidden>Moderationsbereich</a><button id="globalLogoutButton" class="member-menu-logout" type="button">Abmelden ↗</button>
 </div></div></div></header>
 <main class="member-main member-layout member-layout-no-sidebar"><div class="member-content-column">
 <section class="member-hero"><span class="eyebrow">PERSÖNLICHER BEREICH</span><h1>Willkommen zurück, <em id="memberGreeting">Reisende:r</em></h1><p>Hier beginnt dein persönlicher Weg durch Valdara.</p></section>
@@ -168,4 +168,8 @@
 })();
 </script>
 
+
+<script>
+(async()=>{const link=document.getElementById('moderationMenuLink');if(!link||!window.supabase?.createClient||!window.VALDARA_SUPABASE_URL||!window.VALDARA_SUPABASE_ANON_KEY)return;try{const client=window.supabase.createClient(window.VALDARA_SUPABASE_URL,window.VALDARA_SUPABASE_ANON_KEY);const {data}=await client.auth.getSession();const user=data?.session?.user;if(!user)return;const {data:profile}=await client.from('profiles').select('role').eq('id',user.id).maybeSingle();link.hidden=!(profile&&['moderator','admin','superadmin'].includes(profile.role));}catch(e){link.hidden=true}})();
+</script>
 </body></html>
