@@ -230,7 +230,7 @@
       if(areaIds.length){const r=await client.from('game_areas').select('id,name,description').in('id',areaIds);if(!r.error)rows.push(...(r.data||[]).map(x=>({...x,kind:'Spielbereich'})));}
       $('#memberGroups').innerHTML=rows.length?rows.map(r=>`<div class="member-list-item"><span>${esc(r.kind)}</span><strong>${esc(r.name)}</strong><small>${esc(r.description||'')}</small></div>`).join(''):'<p class="member-muted">Du bist aktuell noch keiner Gruppe und keinem Spielbereich zugeordnet.</p>';
       $('#profileForm').addEventListener('submit',async ev=>{ev.preventDefault();const name=$('#profileDisplayName').value.trim();if(!name){message($('#profileMessage'),'Bitte gib einen Anzeigenamen ein.','error');return;}const {error}=await client.from('profiles').update({display_name:name,updated_at:new Date().toISOString()}).eq('id',user.id);message($('#profileMessage'),error?friendly(error):'Dein Profil wurde gespeichert.',error?'error':'success');if(!error)$('#memberGreeting').textContent=name;});
-      $('#logoutButton').addEventListener('click',async()=>{const {error}=await client.auth.signOut();if(error){message($('#memberError'),friendly(error),'error');return;}location.href='index.html';});
+      $('#logoutButton')?.addEventListener('click',async()=>{const {error}=await client.auth.signOut();if(error){message($('#memberError'),friendly(error),'error');return;}location.href='index.html';});
       await initSocialFeatures(user,profile);
       loading.hidden=true;$('#memberContent').hidden=false;
     }catch(e){console.error(e);loading.hidden=true;message($('#memberError'),friendly(e),'error');}

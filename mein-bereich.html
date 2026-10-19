@@ -21,13 +21,16 @@
 <article class="member-card"><div class="member-card-heading"><span class="member-icon">◇</span><div><span class="eyebrow">DEIN AVATAR</span><h2>Dein Erscheinungsbild</h2></div></div><div id="avatarChoices" class="avatar-choices"><p class="member-muted">Avatar-Varianten werden geladen …</p></div><p id="avatarMessage" class="account-message" role="status"></p></article>
 <article class="member-card character-story-editor"><div class="member-card-heading"><span class="member-icon">✎</span><div><span class="eyebrow">DEIN CHARAKTER</span><h2>Deine Geschichte</h2></div></div><p class="member-muted">Schreibe auf, wer dein Charakter ist. Du kannst die Geschichte später jederzeit erweitern oder ändern.</p><label for="characterStory">Charaktergeschichte</label><textarea id="characterStory" rows="8" maxlength="12000" placeholder="Woher kommt dein Charakter? Was hat er erlebt? Welche Ziele oder Geheimnisse trägt er mit sich?"></textarea><div class="character-story-footer"><small id="storyCount" class="member-muted">0 / 12000 Zeichen</small><button id="saveCharacterStory" class="glow-btn" type="button">Geschichte speichern <span>→</span></button></div><p id="storyMessage" class="account-message" role="status"></p><div class="rights-grant-panel"><p class="member-muted">Möchtest du deinen Charakter für die offiziellen Valdara-Geschichten freigeben?</p><button id="openCharacterRights" class="glow-btn" type="button">Rechtefreigabe für Valdara öffnen <span>→</span></button><p id="characterRightsStatus" class="account-message" role="status"></p></div></article>
 <article class="member-card"><div class="member-card-heading"><span class="member-icon">⌘</span><div><span class="eyebrow">DEINE GEMEINSCHAFT</span><h2>Gruppen & Spielbereiche</h2></div></div><p class="member-muted">Hier erscheinen Gruppen und Spielbereiche, denen du beigetreten bist. Diese Übersicht wird mit den vorhandenen Valdara-Daten verbunden.</p><div id="memberGroups" class="member-list"><p class="member-muted">Gruppen und Spielbereiche werden geladen …</p></div></article></section>
-<section class="member-bottom"><div><span class="eyebrow">SICHERHEIT</span><h2>Dein Konto</h2><p>Du kannst dich hier jederzeit sicher abmelden.</p></div><button id="logoutButton" class="account-logout" type="button">Abmelden ↗</button></section></div><p id="memberError" class="account-message" role="alert"></p>
+</div><p id="memberError" class="account-message" role="alert"></p>
 <section id="messagesWorkspace" class="messages-workspace" aria-label="Nachrichten und Freunde">
   <aside class="messages-contacts">
     <div class="messages-search-heading"><span class="eyebrow">DEIN NETZWERK</span><h2>Kontakte</h2></div>
     <label for="memberFriendSearch">Neue Freunde finden</label>
     <input id="memberFriendSearch" type="search" minlength="2" placeholder="Namen suchen …" autocomplete="off">
     <div id="memberFriendSearchResults" class="messages-search-results" aria-live="polite"></div>
+    <div class="messages-friends-heading"><h3>Offene Anfragen</h3></div>
+    <div id="friendIncomingList" class="member-list"><p class="member-muted">Anfragen werden geladen …</p></div>
+    <p id="friendRequestStatus" class="account-message" role="status"></p>
     <div class="messages-friends-heading"><h3>Deine Freunde</h3><span id="memberFriendCount">0</span></div>
     <div id="memberFriendsList" class="messages-friends-list"><p class="member-muted">Freunde werden geladen …</p></div>
     <p id="memberMessagesStatus" class="account-message" role="status"></p>
@@ -40,7 +43,7 @@
 </section>
 <section class="member-feature-grid" aria-label="Weitere Mitgliederbereiche">
 <article id="memberMessages" class="member-card member-feature-card"><div class="member-card-heading"><span class="member-icon">✉</span><div><span class="eyebrow">DIREKTER KONTAKT</span><h2>Nachrichten</h2></div></div><p class="member-muted">Schreibe anderen Reisenden eine private Nachricht.</p><form id="privateMessageForm" class="account-form"><label for="messageRecipient">Empfänger</label><select id="messageRecipient" required><option value="">Mitglieder werden geladen …</option></select><label for="privateMessageText">Nachricht</label><textarea id="privateMessageText" rows="4" maxlength="4000" required placeholder="Deine Nachricht …"></textarea><button class="glow-btn" type="submit">Nachricht senden <span>→</span></button><p id="privateMessageStatus" class="account-message" role="status"></p></form><div class="member-subsection"><h3>Deine Nachrichten</h3><div id="privateMessageList" class="member-list"><p class="member-muted">Nachrichten werden geladen …</p></div></div></article>
-<article id="memberFriends" class="member-card member-feature-card"><div class="member-card-heading"><span class="member-icon">♧</span><div><span class="eyebrow">DEIN NETZWERK</span><h2>Freunde</h2></div></div><form id="friendRequestForm" class="account-form"><label for="friendRecipient">Freundschaftsanfrage senden</label><select id="friendRecipient" required><option value="">Mitglieder werden geladen …</option></select><button class="glow-btn" type="submit">Anfrage senden <span>→</span></button><p id="friendRequestStatus" class="account-message" role="status"></p></form><div class="member-subsection"><h3>Eingehende Anfragen</h3><div id="friendIncomingList" class="member-list"><p class="member-muted">Anfragen werden geladen …</p></div></div><div class="member-subsection"><h3>Freunde & gesendete Anfragen</h3><div id="friendList" class="member-list"><p class="member-muted">Freunde werden geladen …</p></div></div></article>
+<article id="memberFriends" class="member-card member-feature-card"><div class="member-card-heading"><span class="member-icon">♧</span><div><span class="eyebrow">DEIN NETZWERK</span><h2>Freunde</h2></div></div><form id="friendRequestForm" class="account-form"><label for="friendRecipient">Freundschaftsanfrage senden</label><select id="friendRecipient" required><option value="">Mitglieder werden geladen …</option></select><button class="glow-btn" type="submit">Anfrage senden <span>→</span></button><p id="friendRequestStatus" class="account-message" role="status"></p></form><div class="member-subsection"><h3>Freunde & gesendete Anfragen</h3><div id="friendList" class="member-list"><p class="member-muted">Freunde werden geladen …</p></div></div></article>
 <article id="memberInventory" class="member-card member-feature-card"><div class="member-card-heading"><span class="member-icon">◇</span><div><span class="eyebrow">DEINE AUSRÜSTUNG</span><h2>Inventar</h2></div></div><p class="member-muted">Dein Inventar ist vorbereitet. Gegenstände werden später durch Valdara-Spielmechaniken ergänzt.</p><div id="characterInventoryList" class="member-list"><p class="member-muted">Inventar wird geladen …</p></div><p id="inventoryStatus" class="account-message" role="status"></p></article>
 </section>
 </div></main>
@@ -71,7 +74,7 @@
       const title = hero.querySelector('h1');
       const subtitle = hero.querySelector('p');
       if (title) title.innerHTML = labels[view] === 'Charakter' ? 'Willkommen zurück, <em id="memberGreeting">Reisende:r</em>' : labels[view];
-      if (subtitle) subtitle.textContent = ({character:'Hier beginnt dein persönlicher Weg durch Valdara.',messages:'Deine privaten Nachrichten mit anderen Reisenden.',friends:'Verwalte Freundschaften und offene Anfragen.',inventory:'Die Gegenstände deines Charakters.'})[view];
+      if (subtitle) subtitle.textContent = ({character:'Hier beginnt dein persönlicher Weg durch Valdara.',messages:'Deine privaten Nachrichten mit anderen Reisenden.',friends:'Finde Mitglieder, verwalte Anfragen und schreibe deinen Freunden direkt.',inventory:'Die Gegenstände deines Charakters.'})[view];
     }
   });
 })();
@@ -100,7 +103,7 @@
 
 <script>
 (() => {
-  if (new URLSearchParams(location.search).get('view') !== 'messages') return;
+  if (!['messages','friends'].includes(new URLSearchParams(location.search).get('view'))) return;
   const $ = id => document.getElementById(id);
   const client = window.supabase?.createClient && window.VALDARA_SUPABASE_URL && window.VALDARA_SUPABASE_ANON_KEY
     ? window.supabase.createClient(window.VALDARA_SUPABASE_URL, window.VALDARA_SUPABASE_ANON_KEY) : null;
