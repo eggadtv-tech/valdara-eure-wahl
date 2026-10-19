@@ -16,7 +16,7 @@
 <a class="brand" href="index.html" aria-label="Valdara Startseite"><img src="https://vunvrgopzcbbxcxyjnxp.supabase.co/storage/v1/object/public/valdara-media/branding/Goldenes%20Valdara-Fantasyemblem.png" alt="Valdara Logo"></a>
 <nav class="main-nav" id="mainNav"><a data-page="start" href="index.html">Startseite</a><a data-page="welt" href="welt.html">Welt</a><a data-page="voelker" href="voelker.html">Völker</a><a data-page="geschichten" href="geschichten.html">Geschichten</a><a data-page="entscheidungen" href="abstimmungen.html">Abstimmungen</a><a data-page="community" href="community.html">Community</a><a href="forum.html" class="active" aria-current="page">Forum</a><a id="profileNavLink" href="mein-bereich.html" hidden>Profil</a></nav>
 <div class="header-actions"><a class="login-btn" id="accountLink" href="login.html">Anmelden</a><button class="menu-btn" id="menuBtn" type="button" aria-label="Menü öffnen">☰</button></div>
-<div class="member-menu-wrap" id="memberMenuWrap"><button class="member-menu-toggle" id="memberMenuBtn" type="button" aria-expanded="false" aria-controls="memberMenuDropdown"><span class="burger-lines" aria-hidden="true"><i></i><i></i><i></i></span><span class="member-menu-toggle-label">Mein Bereich</span></button><div class="member-menu-dropdown" id="memberMenuDropdown" hidden><div class="member-menu-heading">MEIN BEREICH</div><a href="mein-bereich.html">Übersicht</a><a href="mein-bereich.html?view=character">Charakter</a><a href="mein-bereich.html?view=messages">Nachrichten</a><a href="mein-bereich.html?view=friends">Freunde</a><a href="mein-bereich.html?view=inventory">Inventar</a><a href="forum.html">Forum</a></div></div>
+<div class="member-menu-wrap" id="memberMenuWrap"><button class="member-menu-toggle" id="memberMenuBtn" type="button" aria-expanded="false" aria-controls="memberMenuDropdown"><span class="burger-lines" aria-hidden="true"><i></i><i></i><i></i></span><span class="member-menu-toggle-label">Mein Bereich</span></button><div class="member-menu-dropdown" id="memberMenuDropdown" hidden><div class="member-menu-heading">MEIN BEREICH</div><a href="mein-bereich.html">Übersicht</a><a href="mein-bereich.html?view=character">Charakter</a><a href="mein-bereich.html?view=messages">Nachrichten</a><a href="mein-bereich.html?view=friends">Freunde</a><a href="mein-bereich.html?view=inventory">Inventar</a><a href="forum.html">Forum</a><button id="forumLogoutButton" class="member-menu-logout" type="button" hidden>Abmelden</button></div></div>
 </header>
 <main class="forum-main"><div class="forum-head"><span class="eyebrow">VALDARA · GEMEINSCHAFT</span><h1>Das Forum</h1><p>Diskutiert über Valdara, stellt Fragen und tauscht euch über die Geschichten und Entscheidungen aus.</p></div>
 <div id="forumStatus" class="forum-message" role="status">Forum wird geladen …</div>
@@ -69,6 +69,27 @@
  async function moderateTopic(t,action,changes){const reason=prompt('Begründung für die Moderationsaktion:');if(reason===null)return;const {error}=await client.from('forum_topics').update(changes).eq('id',t.id);if(error){msg('Moderation fehlgeschlagen: '+error.message,true);return}const log=await client.from('moderation_actions').insert({moderator_user_id:session.user.id,target_user_id:t.user_id,topic_id:t.id,action_type:action,reason:reason.trim()||null});if(log.error){msg('WARNUNG: Das Thema wurde geändert, aber der Protokolleintrag ist fehlgeschlagen: '+log.error.message+'. Bitte den Vorfall manuell dokumentieren.',true);return}await loadTopics();await openTopic({...t,...changes})}
  async function moderatePost(p){const reason=prompt('Begründung für das Ausblenden des Beitrags:');if(reason===null)return;const {error}=await client.from('forum_posts').update({is_active:false}).eq('id',p.id);if(error){msg('Beitrag konnte nicht ausgeblendet werden: '+error.message,true);return}const log=await client.from('moderation_actions').insert({moderator_user_id:session.user.id,target_user_id:p.user_id,post_id:p.id,action_type:'hide_post',reason:reason.trim()||null});if(log.error){msg('WARNUNG: Der Beitrag wurde ausgeblendet, aber der Protokolleintrag ist fehlgeschlagen: '+log.error.message+'. Bitte den Vorfall manuell dokumentieren.',true);return}await openTopic(activeTopic)}
  client?.auth.onAuthStateChange(async(_event,s)=>{session=s;profile=null;if(s){const p=await client.from('profiles').select('id,display_name,role,is_active').eq('id',s.user.id).maybeSingle();profile=p.data} $('#moderationPanel').classList.toggle('forum-hidden',!moderator());if(moderator())await loadReports(); });init();
+})();
+</script>
+
+<script>
+(()=>{
+ const nav=document.getElementById('mainNav');
+ const menu=document.getElementById('menuBtn');
+ menu?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const open=nav?.classList.toggle('open');menu.setAttribute('aria-expanded',String(!!open));});
+ nav?.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');menu?.setAttribute('aria-expanded','false');}));
+ const memberBtn=document.getElementById('memberMenuBtn');
+ const dropdown=document.getElementById('memberMenuDropdown');
+ const wrap=document.getElementById('memberMenuWrap');
+ memberBtn?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const open=dropdown?.hasAttribute('hidden');if(open)dropdown.removeAttribute('hidden');else dropdown.setAttribute('hidden','');memberBtn.setAttribute('aria-expanded',String(!!open));});
+ document.addEventListener('click',e=>{if(wrap&&!wrap.contains(e.target)){dropdown?.setAttribute('hidden','');memberBtn?.setAttribute('aria-expanded','false');}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){dropdown?.setAttribute('hidden','');memberBtn?.setAttribute('aria-expanded','false');nav?.classList.remove('open');menu?.setAttribute('aria-expanded','false');}});
+ const logout=document.getElementById('forumLogoutButton');
+ const client=window.supabaseClient||window.supabase;
+ async function syncAuth(){try{if(!client?.auth)return;const {data}=await client.auth.getSession();const logged=!!data?.session;if(logout)logout.hidden=!logged;}catch(_){if(logout)logout.hidden=true;}}
+ logout?.addEventListener('click',async()=>{if(!client?.auth){alert('Abmeldung ist gerade nicht verfügbar.');return;}const {error}=await client.auth.signOut();if(error){alert('Abmelden fehlgeschlagen: '+error.message);return;}location.href='index.html';});
+ syncAuth();
+ try{client?.auth?.onAuthStateChange((_event,session)=>{if(logout)logout.hidden=!session;});}catch(_){}
 })();
 </script>
 </body></html>
