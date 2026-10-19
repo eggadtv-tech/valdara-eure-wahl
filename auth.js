@@ -120,6 +120,7 @@
       const rightsOpen=$('#openCharacterRights'), rightsModal=$('#characterRightsModal'), rightsFinal=$('#characterRightsFinalModal');
       const rightsStatus=$('#characterRightsStatus');
       let rightsAlreadyGranted=false;
+      let rightsGrantAcceptedAt=null;
       let activeRightsTerms=null;
       function closeRightsModal(modal){if(modal){modal.hidden=true;modal.setAttribute('aria-hidden','true');}document.body.classList.remove('people-confirm-open');}
       function openRightsModal(){
@@ -142,7 +143,7 @@
           activeRightsTerms=termsRes.data;
           if(!activeRightsTerms?.agreement_text)throw new Error('Keine aktive Vereinbarung gefunden.');
           if(grantRes.error)throw grantRes.error;
-          if(grantRes.data){rightsAlreadyGranted=true;rightsOpen.disabled=true;rightsOpen.textContent='Charakter bereits für Valdara freigegeben';message(rightsStatus,`Freigabe dokumentiert am ${new Date(grantRes.data.accepted_at).toLocaleDateString('de-DE')}.`,'success');}
+          if(grantRes.data){rightsAlreadyGranted=true;rightsGrantAcceptedAt=grantRes.data.accepted_at;rightsOpen.disabled=true;rightsOpen.textContent='Charakter bereits für Valdara freigegeben';message(rightsStatus,`Freigabe dokumentiert am ${new Date(grantRes.data.accepted_at).toLocaleDateString('de-DE')}.`,'success');}
         }catch(err){console.error('Rechtefreigabe konnte nicht geladen werden:',err);rightsOpen.disabled=true;message(rightsStatus,'Rechtefreigabe ist noch nicht verfügbar. Bitte prüfe die Supabase-Berechtigungen und die aktive Vereinbarung.','error');}
         rightsOpen.addEventListener('click',openRightsModal);
         $('#characterRightsClose').addEventListener('click',()=>closeRightsModal(rightsModal));
@@ -161,7 +162,7 @@
             const {data,error}=await client.rpc('grant_valdara_character_rights',{p_character_id:currentCharacter.id,p_confirmed:true});
             if(error){if(error.code==='23505')throw new Error('Für diesen Charakter wurde bereits eine Freigabe gespeichert.');throw error;}
             if(!data)throw new Error('Die Datenbank hat keine Freigabe-ID zurückgegeben.');
-            closeRightsModal(rightsFinal);rightsAlreadyGranted=true;rightsOpen.disabled=true;rightsOpen.textContent='Charakter bereits für Valdara freigegeben';message(rightsStatus,'Deine Freigabe wurde gespeichert.','success');
+            closeRightsModal(rightsFinal);rightsAlreadyGranted=true;rightsGrantAcceptedAt=new Date().toISOString();rightsOpen.disabled=true;rightsOpen.textContent='Charakter bereits für Valdara freigegeben';message(rightsStatus,'Deine Freigabe wurde gespeichert.','success');
           }catch(error){message($('#characterRightsFinalMessage'),friendly(error),'error');}
           finally{btn.disabled=false;}
         });
@@ -183,9 +184,14 @@
         const avatar=variants.find(v=>v.id===character.avatar_variant_id);
         const avatarImage=character.custom_avatar_url||avatar?.image_url;
         const person=people.find(p=>p.id===character.people_id);
-        characterPage.innerHTML=`<article class="character-sheet"><div class="character-sheet-heading"><span class="eyebrow">DEIN CHARAKTER IN VALDARA</span><h1>${esc(character.display_name||profile.display_name||'Dein Charakter')}</h1><p class="member-muted">${esc(person?.name||'Noch kein Volk')}</p></div><div class="character-sheet-main">${avatarImage?`<img class="character-sheet-avatar" src="${esc(avatarImage)}" alt="Avatar von ${esc(character.display_name||profile.display_name||'deinem Charakter')}">`:''}<div class="character-sheet-story"><span class="eyebrow">DEINE GESCHICHTE</span><div class="character-story-text">${esc(character.character_story).replace(/\n/g,'<br>')}</div></div></div><button id="editCharacterButton" class="glow-btn" type="button">Charakter bearbeiten <span>→</span></button></article>`;
+        const rightsOverviewStatus=rightsAlreadyGranted
+          ? `Freigegeben am ${rightsGrantAcceptedAt?new Date(rightsGrantAcceptedAt).toLocaleDateString('de-DE'):'—'}`
+          : 'Noch nicht für offizielle Valdara-Geschichten freigegeben';
+        const rightsOverviewClass=rightsAlreadyGranted?'is-granted':'not-granted';
+        characterPage.innerHTML=`<article class="character-sheet"><div class="character-sheet-heading"><span class="eyebrow">DEIN CHARAKTER IN VALDARA</span><h1>${esc(character.display_name||profile.display_name||'Dein Charakter')}</h1><p class="member-muted">${esc(person?.name||'Noch kein Volk')}</p></div><div class="character-sheet-main">${avatarImage?`<img class="character-sheet-avatar" src="${esc(avatarImage)}" alt="Avatar von ${esc(character.display_name||profile.display_name||'deinem Charakter')}">`:''}<div class="character-sheet-story"><span class="eyebrow">DEINE GESCHICHTE</span><div class="character-story-text">${esc(character.character_story).replace(/\n/g,'<br>')}</div></div></div><section class="character-rights-overview ${rightsOverviewClass}" aria-live="polite"><div><span class="eyebrow">STORY-FREIGABE</span><strong>${rightsAlreadyGranted?'✓ Für Valdara freigegeben':'Noch keine Freigabe'}</strong><p>${esc(rightsOverviewStatus)}</p></div><button id="characterRightsOverviewButton" class="glow-btn" type="button">${rightsAlreadyGranted?'Freigabe-Info':'Freigabe verwalten'} <span>→</span></button></section><button id="editCharacterButton" class="glow-btn" type="button">Charakter bearbeiten <span>→</span></button></article>`;
         characterPage.hidden=false;if(memberGrid)memberGrid.hidden=true;if(memberBottom)memberBottom.hidden=true;
         $('#editCharacterButton')?.addEventListener('click',()=>{characterPage.hidden=true;if(memberGrid)memberGrid.hidden=false;if(memberBottom)memberBottom.hidden=false;window.scrollTo({top:0,behavior:'smooth'});});
+        $('#characterRightsOverviewButton')?.addEventListener('click',()=>{if(rightsAlreadyGranted){message(rightsStatus,`Freigabe dokumentiert am ${rightsGrantAcceptedAt?new Date(rightsGrantAcceptedAt).toLocaleDateString('de-DE'):'unbekannten Datum'}.`,'success');characterPage.hidden=true;if(memberGrid)memberGrid.hidden=false;if(memberBottom)memberBottom.hidden=false;const editor=document.querySelector('.character-story-editor');editor?.scrollIntoView({behavior:'smooth',block:'start'});}else{$('#editCharacterButton')?.click();setTimeout(()=>document.querySelector('.character-story-editor')?.scrollIntoView({behavior:'smooth',block:'start'}),50);}});
       }
       if(storySave)storySave.addEventListener('click',async()=>{
         const story=storyField.value.trim();
