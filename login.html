@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css">
 </head>
 <body data-page="login"><div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
-<header class="site-header"><a class="brand" href="index.html" aria-label="Valdara Startseite"><img src="https://vunvrgopzcbbxcxyjnxp.supabase.co/storage/v1/object/public/valdara-media/branding/Goldenes%20Valdara-Fantasyemblem.png" alt="Valdara Logo"></a>
+<header class="site-header"><a class="brand" href="index.html" aria-label="Valdara Startseite"><img src="assets/valdara-logo.jpg" alt="Valdara Logo"><span>VALDARA<small>EURE WAHL</small></span></a>
 <nav class="main-nav"><a href="index.html">Startseite</a><a href="welt.html">Welt</a><a href="voelker.html">Völker</a><a href="geschichten.html">Geschichten</a><a href="abstimmungen.html">Abstimmungen</a><a href="community.html">Community</a><a id="profileNavLink" href="mein-bereich.html" hidden>Profil</a></nav><div class="header-actions"><a class="login-btn" href="login.html">Anmelden</a><button class="menu-btn" id="menuBtn" type="button">☰</button><div class="member-menu-wrap" id="memberMenuWrap">
 <button class="member-menu-toggle" id="memberMenuBtn" type="button" aria-expanded="false" aria-controls="memberMenuDropdown" aria-label="Mein Bereich öffnen"><span class="burger-lines" aria-hidden="true"><i></i><i></i><i></i></span><span class="member-menu-toggle-label">Mein Bereich</span></button>
 <div class="member-menu-dropdown" id="memberMenuDropdown" hidden>
@@ -17,9 +17,8 @@
 <a href="mein-bereich.html?view=messages">Nachrichten</a>
 <a href="mein-bereich.html?view=friends">Freunde</a>
 <a href="mein-bereich.html?view=inventory">Inventar</a>
-<a href="forum.html">Forum</a>
-</div><button id="globalLogoutButton" class="member-menu-logout" type="button">Abmelden ↗</button>
-</div></div></header>
+<a href="forum.html">Forum</a><button id="globalLogoutButton" class="member-menu-logout" type="button">Abmelden ↗</button>
+</div></div></div></header>
 <main class="account-main"><section class="account-shell"><div class="account-intro"><span class="eyebrow">DEIN PLATZ IN VALDARA</span><h1>Die Geschichte wartet auf euch.</h1><p>Meldet euch an oder erstellt euer Konto, um euren persönlichen Bereich zu betreten und Teil von Valdara zu werden.</p><div class="account-seal">✧<small>VALDARA · EURE WAHL</small></div></div>
 <div class="account-panel"><div class="account-tabs" role="tablist"><button type="button" class="account-tab active" data-auth-mode="login">Anmelden</button><button type="button" class="account-tab" data-auth-mode="signup">Konto erstellen</button></div>
 <form id="authForm" class="account-form"><label for="authDisplayName" id="displayNameLabel" hidden>Anzeigename</label><input id="authDisplayName" name="display_name" type="text" autocomplete="nickname" placeholder="Anzeigename" hidden>
