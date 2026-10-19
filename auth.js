@@ -116,6 +116,56 @@
       const filtered=variants.filter(v=>Boolean(profile.people_id)&&v.people_id===profile.people_id);
       const characterRes=await client.from('characters').select('id,user_id,people_id,avatar_variant_id,custom_avatar_url,display_name,character_story').eq('user_id',user.id).maybeSingle();
       let currentCharacter=characterRes.error?null:characterRes.data;
+      // Rechtefreigabe: wird als unveränderlicher, versionierter Datensatz in Supabase dokumentiert.
+      const rightsOpen=$('#openCharacterRights'), rightsModal=$('#characterRightsModal'), rightsFinal=$('#characterRightsFinalModal');
+      const rightsStatus=$('#characterRightsStatus');
+      let rightsAlreadyGranted=false;
+      let activeRightsTerms=null;
+      function closeRightsModal(modal){if(modal){modal.hidden=true;modal.setAttribute('aria-hidden','true');}document.body.classList.remove('people-confirm-open');}
+      function openRightsModal(){
+        if(rightsAlreadyGranted){message(rightsStatus,'Für diesen Charakter ist bereits eine Freigabe gespeichert.','success');return;}
+        if(!currentCharacter?.id || !currentCharacter.character_story?.trim()) { message(rightsStatus,'Bitte speichere zuerst eine Charaktergeschichte.','error'); return; }
+        if(!activeRightsTerms?.agreement_text){message(rightsStatus,'Die Vereinbarung konnte nicht geladen werden. Bitte später erneut versuchen.','error');return;}
+        $('#rightsCharacterName').textContent=currentCharacter.display_name||profile.display_name||'Unbenannter Charakter';
+        $('#rightsCharacterStory').textContent=currentCharacter.character_story;
+        $('#rightsAgreementText').textContent=activeRightsTerms.agreement_text;
+        $('#characterRightsCheckbox').checked=false;$('#characterRightsAccept').disabled=true;message($('#characterRightsMessage'),'');
+        rightsModal.hidden=false;rightsModal.setAttribute('aria-hidden','false');document.body.classList.add('people-confirm-open');$('#characterRightsClose').focus();
+      }
+      if(rightsOpen){
+        try{
+          const [termsRes,grantRes]=await Promise.all([
+            client.from('character_rights_terms').select('version,agreement_text').eq('is_active',true).maybeSingle(),
+            currentCharacter?.id ? client.from('character_rights_grants').select('id,consent_version,accepted_at').eq('character_id',currentCharacter.id).maybeSingle() : Promise.resolve({data:null,error:null})
+          ]);
+          if(termsRes.error)throw termsRes.error;
+          activeRightsTerms=termsRes.data;
+          if(!activeRightsTerms?.agreement_text)throw new Error('Keine aktive Vereinbarung gefunden.');
+          if(grantRes.error)throw grantRes.error;
+          if(grantRes.data){rightsAlreadyGranted=true;rightsOpen.disabled=true;rightsOpen.textContent='Charakter bereits für Valdara freigegeben';message(rightsStatus,`Freigabe dokumentiert am ${new Date(grantRes.data.accepted_at).toLocaleDateString('de-DE')}.`,'success');}
+        }catch(err){console.error('Rechtefreigabe konnte nicht geladen werden:',err);rightsOpen.disabled=true;message(rightsStatus,'Rechtefreigabe ist noch nicht verfügbar. Bitte prüfe die Supabase-Berechtigungen und die aktive Vereinbarung.','error');}
+        rightsOpen.addEventListener('click',openRightsModal);
+        $('#characterRightsClose').addEventListener('click',()=>closeRightsModal(rightsModal));
+        $('#characterRightsCancel').addEventListener('click',()=>closeRightsModal(rightsModal));
+        $('#characterRightsCheckbox').addEventListener('change',ev=>{$('#characterRightsAccept').disabled=!ev.target.checked;});
+        $('#characterRightsAccept').addEventListener('click',()=>{
+          if(!$('#characterRightsCheckbox').checked)return;
+          closeRightsModal(rightsModal);rightsFinal.hidden=false;rightsFinal.setAttribute('aria-hidden','false');document.body.classList.add('people-confirm-open');
+        });
+        $('#characterRightsFinalCancel').addEventListener('click',()=>closeRightsModal(rightsFinal));
+        rightsModal.addEventListener('click',ev=>{if(ev.target===rightsModal)closeRightsModal(rightsModal);});
+        document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){if(!rightsFinal.hidden)closeRightsModal(rightsFinal);else if(!rightsModal.hidden)closeRightsModal(rightsModal);}});
+        $('#characterRightsFinalAccept').addEventListener('click',async()=>{
+          const btn=$('#characterRightsFinalAccept');btn.disabled=true;message($('#characterRightsFinalMessage'),'Freigabe wird sicher gespeichert …');
+          try{
+            const {data,error}=await client.rpc('grant_valdara_character_rights',{p_character_id:currentCharacter.id,p_confirmed:true});
+            if(error){if(error.code==='23505')throw new Error('Für diesen Charakter wurde bereits eine Freigabe gespeichert.');throw error;}
+            if(!data)throw new Error('Die Datenbank hat keine Freigabe-ID zurückgegeben.');
+            closeRightsModal(rightsFinal);rightsAlreadyGranted=true;rightsOpen.disabled=true;rightsOpen.textContent='Charakter bereits für Valdara freigegeben';message(rightsStatus,'Deine Freigabe wurde gespeichert.','success');
+          }catch(error){message($('#characterRightsFinalMessage'),friendly(error),'error');}
+          finally{btn.disabled=false;}
+        });
+      }
       // Persönlicher Avatar: direkt am Charakter gespeichert, nicht als globale Variante auswählbar.
       if(currentCharacter?.custom_avatar_url){
         avatarBox.innerHTML=`<div class="avatar-choice selected" aria-label="Persönlicher Avatar"><img src="${esc(currentCharacter.custom_avatar_url)}" alt="Dein persönlicher Avatar"><span>Dein persönlicher Avatar</span><small class="avatar-selected-label">Nur für dein Konto</small></div>`;
