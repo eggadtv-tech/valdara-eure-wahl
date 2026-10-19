@@ -465,3 +465,8 @@ body[data-page="member"][data-member-view="messages"] #messagesWorkspace{display
 .character-rights-overview.not-granted strong{color:#f0c779}
 .character-rights-overview .glow-btn{flex-shrink:0}
 @media(max-width:640px){.character-rights-overview{align-items:stretch;flex-direction:column}.character-rights-overview .glow-btn{width:100%}}
+
+/* Globale Abmeldung am unteren Rand des Mein-Bereich-Menüs */
+.member-menu-logout{display:block;width:100%;margin-top:8px;padding:12px 16px;border:0;border-top:1px solid rgba(215,173,88,.22);background:transparent;color:#e8c783;text-align:left;font:600 12px Manrope,sans-serif;cursor:pointer}
+.member-menu-logout:hover{background:rgba(215,173,88,.08)}
+.member-menu-logout:disabled{opacity:.6;cursor:wait}

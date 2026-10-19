@@ -333,5 +333,12 @@
     inventoryBox.innerHTML=inventoryRes.data?.length?inventoryRes.data.map(item=>`<div class="social-row"><div class="social-row-main"><strong>${esc(item.item_name)}${item.quantity>1?' × '+item.quantity:''}</strong><small>${esc(item.description||'')}</small></div></div>`).join(''):empty('Dein Inventar ist derzeit leer. Gegenstände werden später ergänzt.');
   }
   function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  document.addEventListener('DOMContentLoaded',()=>{initAuthPage();initMemberPage();initSitePeopleTheme();if(client)client.auth.onAuthStateChange((_event,session)=>{updateAccountLink(session);if(session) initSitePeopleTheme();else applySitePeopleTheme('');});});
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.querySelectorAll('#globalLogoutButton').forEach(button=>button.addEventListener('click',async()=>{
+      if(!client){location.href='login.html';return;}
+      button.disabled=true;const oldLabel=button.textContent;button.textContent='Abmeldung …';
+      try{const {error}=await client.auth.signOut();if(error)throw error;location.href='index.html';}
+      catch(error){console.error('Abmeldung fehlgeschlagen:',error);button.disabled=false;button.textContent=oldLabel;alert('Abmelden war nicht möglich. Bitte versuche es erneut.');}
+    }));
+    initAuthPage();initMemberPage();initSitePeopleTheme();if(client)client.auth.onAuthStateChange((_event,session)=>{updateAccountLink(session);if(session) initSitePeopleTheme();else applySitePeopleTheme('');});});
 })();
