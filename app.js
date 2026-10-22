@@ -510,7 +510,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
       } else if (message.includes('berechtigung')) {
         statusNode.textContent = 'Dein Profil darf keinen manuellen W20-Entscheid auslösen.';
       } else if (message.includes('bereits entschieden')) {
-        statusNode.textContent = 'Diese Abstimmung wurde bereits entschieden.';
+        statusNode.textContent = 'Diese Abstimmung wurde bereits entschieden. Prüfe die SQL-Funktion für erneute Würfe.';
       } else {
         statusNode.textContent = 'Der W20-Entscheid ist fehlgeschlagen. Bitte SQL-Funktion und Berechtigungen prüfen.';
       }
@@ -543,7 +543,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
     const total = rows.reduce((sum, row) => sum + row.votes, 0);
     const max = Math.max(0, ...rows.map(row => row.votes));
     const tiedLeaders = rows.filter(row => row.votes === max && max > 0);
-    const hasOpenTie = tiedLeaders.length > 1 && decision.status !== 'resolved' && !result?.winning_option_id;
+    const hasTie = tiedLeaders.length > 1;
     const winner = result?.winning_option_id
       ? rows.find(row => row.id === result.winning_option_id)
       : rows.find(row => row.id === decision.result_option_id);
@@ -576,7 +576,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
       </div>
       <div class="poll-options">${optionsHtml || '<p>Keine Antwortmöglichkeiten vorhanden.</p>'}</div>
       <div class="poll-overview-total"><span>Gesamtstimmen: <strong>${total}</strong></span><span>${rows.length} Antwortmöglichkeiten</span></div>
-      ${allowManualControls && hasOpenTie ? `<div class="poll-manual-tie"><p>Gleichstand zwischen: <strong>${tiedLeaders.map(row => esc(row.title)).join(', ')}</strong></p><button type="button" class="manual-tie-button" data-tie-decision-id="${decision.id}">⚄ Gleichstand manuell mit W20 auswürfeln</button></div>` : ''}
+      ${allowManualControls && hasTie ? `<div class="poll-manual-tie"><p>Gleichstand zwischen: <strong>${tiedLeaders.map(row => esc(row.title)).join(', ')}</strong></p><button type="button" class="manual-tie-button" data-tie-decision-id="${decision.id}">${decision.status === 'resolved' || result?.winning_option_id ? '⚄ Erneut mit W20 würfeln' : '⚄ Gleichstand manuell mit W20 auswürfeln'}</button></div>` : ''}
       ${winner && (decision.status === 'resolved' || result) ? `<div class="poll-winner">✦ Gewinner: <strong>${esc(winner.title)}</strong>${wasDice ? ' · durch W20 entschieden' : ' · nach Gesamtstimmen'}</div>` : ''}
       ${diceHtml}
     </article>`;
