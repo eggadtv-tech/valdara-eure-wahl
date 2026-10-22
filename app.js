@@ -443,6 +443,54 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
     apikey: window.VALDARA_SUPABASE_ANON_KEY,
     Authorization: `Bearer ${window.VALDARA_SUPABASE_ANON_KEY}`
   };
+  // Separater Client nutzt die bestehende Supabase-Auth-Session für geschützte manuelle Stimmen.
+  let voteAdminClient = null;
+  try {
+    if (window.supabase?.createClient) {
+      voteAdminClient = window.supabase.createClient(
+        window.VALDARA_SUPABASE_URL,
+        window.VALDARA_SUPABASE_ANON_KEY,
+        { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+      );
+    }
+  } catch (error) { console.warn('Admin-Client für manuelle Stimmen nicht verfügbar:', error); }
+  let canManageManualVotes = false;
+  async function checkManualVotePermission() {
+    canManageManualVotes = false;
+    if (!voteAdminClient) return;
+    try {
+      const { data: { session } } = await voteAdminClient.auth.getSession();
+      if (!session?.user?.id) return;
+      const { data: profile, error } = await voteAdminClient.from('profiles')
+        .select('role').eq('id', session.user.id).maybeSingle();
+      if (error) throw error;
+      canManageManualVotes = ['moderator', 'admin', 'superadmin'].includes(profile?.role);
+    } catch (error) {
+      console.warn('Berechtigung für manuelle Stimmen konnte nicht geprüft werden:', error);
+    }
+  }
+  async function adjustManualVote(decisionId, optionId, adjustment, button) {
+    if (!voteAdminClient || !canManageManualVotes) return;
+    const controls = list.querySelectorAll(`[data-manual-decision="${decisionId}"] button`);
+    controls.forEach(control => { control.disabled = true; });
+    statusNode.textContent = 'Manuelle Instagram-Stimme wird gespeichert …';
+    try {
+      const { data, error } = await voteAdminClient.rpc('adjust_manual_instagram_vote', {
+        p_decision_id: decisionId, p_option_id: optionId, p_adjustment: adjustment
+      });
+      if (error) throw error;
+      statusNode.textContent = adjustment > 0 ? 'Manuelle Instagram-Stimme hinzugefügt.' : 'Manuelle Instagram-Stimme abgezogen.';
+      await load();
+    } catch (error) {
+      console.error('Manuelle Instagram-Stimme konnte nicht geändert werden:', error);
+      statusNode.textContent = error?.message?.includes('Keine Berechtigung')
+        ? 'Dein Profil hat keine Berechtigung für manuelle Stimmen.'
+        : (error?.message?.includes('keine manuell hinzugefügte Stimme')
+          ? 'Es gibt keine manuell hinzugefügte Stimme zum Abziehen.'
+          : 'Die manuelle Stimme konnte nicht gespeichert werden. Bitte Berechtigung und SQL-Funktion prüfen.');
+      controls.forEach(control => { control.disabled = false; });
+    }
+  }
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[ch]));
@@ -461,7 +509,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
   function statusLabel(status) {
     return ({active:'Aktiv', closed:'Abgeschlossen', resolved:'Entschieden', cancelled:'Abgebrochen', draft:'Vorbereitung'})[status] || status || 'Unbekannt';
   }
-  function renderCard(decision, options, totals, result, rolls) {
+  function renderCard(decision, options, totals, result, rolls, allowManualControls) {
     const rows = options.map(option => {
       const votes = Number((totals.find(t => t.option_id === option.id) || {}).total_votes || 0);
       return {...option, votes};
@@ -479,7 +527,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
     const optionName = id => rows.find(row => row.id === id)?.title || 'Unbekannte Option';
     const optionsHtml = rows.map(row => `
       <div class="poll-option">
-        <div class="poll-option-line"><span>${esc(row.title)}</span><strong>${row.votes} ${row.votes === 1 ? 'Stimme' : 'Stimmen'}</strong></div>
+        <div class="poll-option-line"><span>${esc(row.title)}</span><div class="poll-option-vote-tools"><strong>${row.votes} ${row.votes === 1 ? 'Stimme' : 'Stimmen'}</strong>${allowManualControls ? `<span class="manual-vote-controls" data-manual-decision="${decision.id}"><button type="button" class="manual-vote-button minus" data-decision-id="${decision.id}" data-option-id="${row.id}" data-adjustment="-1" aria-label="Eine manuelle Instagram-Stimme für ${esc(row.title)} abziehen">−</button><button type="button" class="manual-vote-button plus" data-decision-id="${decision.id}" data-option-id="${row.id}" data-adjustment="1" aria-label="Eine manuelle Instagram-Stimme für ${esc(row.title)} hinzufügen">+</button></span>` : ''}</div></div>
         <div class="poll-progress" aria-label="${esc(row.title)}: ${row.votes} Stimmen von ${total}">
           <span style="width:${total ? (row.votes/total*100) : 0}%"></span>
         </div>
@@ -509,6 +557,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
     refreshButton.disabled = true;
     statusNode.textContent = 'Abstimmungen werden aktualisiert …';
     try {
+      await checkManualVotePermission();
       const [decisions, options, totals] = await Promise.all([
         get('decisions?select=id,title,status,starts_at,ends_at,created_at,result_option_id&status=not.eq.draft'),
         get('decision_options?select=id,decision_id,title,description,sort_order,is_active&is_active=eq.true&order=sort_order.asc'),
@@ -525,7 +574,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
         options.filter(o => o.decision_id === d.id).sort((a,b) => Number(a.sort_order||0)-Number(b.sort_order||0)),
         totals.filter(t => t.decision_id === d.id),
         results.find(r => r.decision_id === d.id),
-        rolls.filter(r => r.decision_id === d.id)
+        rolls.filter(r => r.decision_id === d.id),
+        canManageManualVotes
       )).join('') : '<div class="poll-overview-empty">Aktuell gibt es keine öffentlichen Abstimmungen.</div>';
       statusNode.textContent = `${visible.length} Abstimmung${visible.length === 1 ? '' : 'en'} geladen · neueste zuerst`;
     } catch (error) {
@@ -537,6 +587,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
     }
   }
   refreshButton.addEventListener('click', load);
+  list.addEventListener('click', event => {
+    const button = event.target.closest('.manual-vote-button');
+    if (!button || button.disabled) return;
+    const decisionId = button.dataset.decisionId;
+    const optionId = button.dataset.optionId;
+    const adjustment = Number(button.dataset.adjustment);
+    if (!decisionId || !optionId || ![-1, 1].includes(adjustment)) return;
+    adjustManualVote(decisionId, optionId, adjustment, button);
+  });
   load();
 })();
 
