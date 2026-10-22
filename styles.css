@@ -481,3 +481,10 @@ body[data-page="member"][data-member-view="messages"] #messagesWorkspace,body[da
 .manual-vote-button.minus:hover:not(:disabled){background:rgba(224,82,69,.14)}
 .manual-vote-button:disabled{opacity:.45;cursor:wait}
 @media(max-width:520px){.poll-option-line{align-items:flex-start}.poll-option-vote-tools{gap:6px}.manual-vote-button{width:27px;height:27px}}
+
+/* Manuell ausgelöster W20-Gleichstandsentscheid */
+.poll-manual-tie{margin-top:14px;padding:13px 14px;border:1px solid rgba(155,128,198,.4);border-radius:10px;background:rgba(126,102,164,.1);color:#ded2f2;font-size:12px}
+.poll-manual-tie p{margin:0 0 10px;line-height:1.6}
+.manual-tie-button{border:1px solid rgba(215,173,88,.6);border-radius:999px;background:rgba(215,173,88,.12);color:var(--gold2);padding:10px 15px;font:inherit;font-weight:700;cursor:pointer;transition:background .2s ease,opacity .2s ease}
+.manual-tie-button:hover:not(:disabled){background:rgba(215,173,88,.22)}
+.manual-tie-button:disabled{opacity:.5;cursor:wait}

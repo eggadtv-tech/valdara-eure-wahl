@@ -491,6 +491,32 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
       controls.forEach(control => { control.disabled = false; });
     }
   }
+  async function manuallyRollTie(decisionId, button) {
+    if (!voteAdminClient || !canManageManualVotes || !decisionId) return;
+    button.disabled = true;
+    statusNode.textContent = 'Gleichstand wird per W20 entschieden …';
+    try {
+      const { data, error } = await voteAdminClient.rpc('manual_resolve_valdara_tie', {
+        p_decision_id: decisionId
+      });
+      if (error) throw error;
+      statusNode.textContent = 'Der Gleichstand wurde ausgewürfelt.';
+      await load();
+    } catch (error) {
+      console.error('Manueller W20-Entscheid fehlgeschlagen:', error);
+      const message = String(error?.message || '').toLowerCase();
+      if (message.includes('kein gleichstand')) {
+        statusNode.textContent = 'Für diese Abstimmung liegt aktuell kein Gleichstand vor.';
+      } else if (message.includes('berechtigung')) {
+        statusNode.textContent = 'Dein Profil darf keinen manuellen W20-Entscheid auslösen.';
+      } else if (message.includes('bereits entschieden')) {
+        statusNode.textContent = 'Diese Abstimmung wurde bereits entschieden.';
+      } else {
+        statusNode.textContent = 'Der W20-Entscheid ist fehlgeschlagen. Bitte SQL-Funktion und Berechtigungen prüfen.';
+      }
+      button.disabled = false;
+    }
+  }
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[ch]));
@@ -516,6 +542,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
     });
     const total = rows.reduce((sum, row) => sum + row.votes, 0);
     const max = Math.max(0, ...rows.map(row => row.votes));
+    const tiedLeaders = rows.filter(row => row.votes === max && max > 0);
+    const hasOpenTie = tiedLeaders.length > 1 && decision.status !== 'resolved' && !result?.winning_option_id;
     const winner = result?.winning_option_id
       ? rows.find(row => row.id === result.winning_option_id)
       : rows.find(row => row.id === decision.result_option_id);
@@ -548,6 +576,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
       </div>
       <div class="poll-options">${optionsHtml || '<p>Keine Antwortmöglichkeiten vorhanden.</p>'}</div>
       <div class="poll-overview-total"><span>Gesamtstimmen: <strong>${total}</strong></span><span>${rows.length} Antwortmöglichkeiten</span></div>
+      ${allowManualControls && hasOpenTie ? `<div class="poll-manual-tie"><p>Gleichstand zwischen: <strong>${tiedLeaders.map(row => esc(row.title)).join(', ')}</strong></p><button type="button" class="manual-tie-button" data-tie-decision-id="${decision.id}">⚄ Gleichstand manuell mit W20 auswürfeln</button></div>` : ''}
       ${winner && (decision.status === 'resolved' || result) ? `<div class="poll-winner">✦ Gewinner: <strong>${esc(winner.title)}</strong>${wasDice ? ' · durch W20 entschieden' : ' · nach Gesamtstimmen'}</div>` : ''}
       ${diceHtml}
     </article>`;
@@ -588,6 +617,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePeople();close
   }
   refreshButton.addEventListener('click', load);
   list.addEventListener('click', event => {
+    const tieButton = event.target.closest('.manual-tie-button');
+    if (tieButton && !tieButton.disabled) {
+      manuallyRollTie(tieButton.dataset.tieDecisionId, tieButton);
+      return;
+    }
     const button = event.target.closest('.manual-vote-button');
     if (!button || button.disabled) return;
     const decisionId = button.dataset.decisionId;
